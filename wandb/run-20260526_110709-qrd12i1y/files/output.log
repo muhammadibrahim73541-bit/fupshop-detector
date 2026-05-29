@@ -1,0 +1,18 @@
+WARNING: Only 0 labels found. Need at least 10 for training.
+Generating synthetic demo data...
+Training on 500 samples (150 scam, 350 legit)
+Training with GridSearchCV...
+Fitting 3 folds for each of 8 candidates, totalling 24 fits
+Best params: {'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 50}
+F1 Score: 1.0000
+Accuracy: 1.0000
+Classification Report:
+              precision    recall  f1-score   support
+       legit       1.00      1.00      1.00        70
+        scam       1.00      1.00      1.00        30
+    accuracy                           1.00       100
+   macro avg       1.00      1.00      1.00       100
+weighted avg       1.00      1.00      1.00       100
+Generating SHAP explanations...
+Model saved to: /workspaces/fupshop-detector/src/../models/model.pkl
+W&B Run URL: https://wandb.ai/mianmittho5-aalborg-universitet/fupshop/runs/qrd12i1y
