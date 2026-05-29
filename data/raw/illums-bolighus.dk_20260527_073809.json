@@ -1,0 +1,32 @@
+{
+  "url": "https://illums-bolighus.dk",
+  "domain": "illums-bolighus.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": null,
+    "registrar": null,
+    "expiration_date": null,
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": false,
+    "valid": false,
+    "error": "[Errno -2] Name or service not known"
+  },
+  "virustotal": {
+    "checked": false,
+    "error": "VT Status 404"
+  },
+  "timestamp": "2026-05-27T07:38:09.611192"
+}

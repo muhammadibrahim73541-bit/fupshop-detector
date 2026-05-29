@@ -1,0 +1,38 @@
+{
+  "url": "https://lidl.dk",
+  "domain": "lidl.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": 9142,
+    "registrar": null,
+    "expiration_date": "2026-06-30 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": true,
+    "valid": true,
+    "days_until_expiry": 87,
+    "issuer": "((('countryName', 'CH'),), (('organizationName', 'SwissSign AG'),), (('commonName', 'SwissSign RSA TLS EV ICA 2022 - 1'),))"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 57,
+    "undetected": 34,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-27T07:38:04.618803"
+}

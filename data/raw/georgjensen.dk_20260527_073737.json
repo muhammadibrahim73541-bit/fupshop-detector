@@ -1,0 +1,37 @@
+{
+  "url": "https://georgjensen.dk",
+  "domain": "georgjensen.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": 10786,
+    "registrar": null,
+    "expiration_date": "2026-12-31 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": false,
+    "valid": false,
+    "error": "timed out"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 0,
+    "undetected": 91,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-27T07:37:37.092664"
+}

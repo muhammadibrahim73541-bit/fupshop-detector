@@ -1,0 +1,38 @@
+{
+  "url": "https://magasin.dk",
+  "domain": "magasin.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": 11242,
+    "registrar": null,
+    "expiration_date": "2026-09-30 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": true,
+    "valid": true,
+    "days_until_expiry": 84,
+    "issuer": "((('countryName', 'US'),), (('organizationName', \"Let's Encrypt\"),), (('commonName', 'R13'),))"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 57,
+    "undetected": 34,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-27T07:36:52.992971"
+}

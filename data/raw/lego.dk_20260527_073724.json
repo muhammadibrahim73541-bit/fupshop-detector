@@ -1,0 +1,38 @@
+{
+  "url": "https://lego.dk",
+  "domain": "lego.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": 14090,
+    "registrar": null,
+    "expiration_date": "2026-09-30 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": true,
+    "valid": true,
+    "days_until_expiry": 160,
+    "issuer": "((('countryName', 'US'),), (('organizationName', 'Amazon'),), (('commonName', 'Amazon RSA 2048 M04'),))"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 58,
+    "undetected": 33,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-27T07:37:24.534121"
+}
