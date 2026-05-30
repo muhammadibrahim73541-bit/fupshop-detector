@@ -1,0 +1,32 @@
+{
+  "accuracy": 0.9886363636363636,
+  "train_accuracy": 0.9926650366748166,
+  "overfitting_gap": 0.004028673038453001,
+  "feature_importance": {
+    "url_length": 0.018324261531233788,
+    "domain_length": 0.009296756237745285,
+    "path_length": 0.21564505994319916,
+    "query_length": 0.0,
+    "dot_count": 0.03175177425146103,
+    "hyphen_count": 0.027163993567228317,
+    "underscore_count": 0.0019651802722364664,
+    "slash_count": 0.2162027508020401,
+    "digit_count": 0.015276698395609856,
+    "special_char_count": 0.00906170904636383,
+    "has_https": 0.011323099955916405,
+    "has_ip_address": 0.0,
+    "has_port": 0.0,
+    "suspicious_keyword_count": 0.0,
+    "brand_in_domain": 0.005392920225858688,
+    "brand_in_path": 0.0,
+    "multiple_subdomains": 0.0,
+    "path_depth": 0.37129467725753784,
+    "has_query_params": 0.0,
+    "has_fragment": 0.0,
+    "domain_entropy": 0.022962739691138268,
+    "typosquatting_score": 0.0037914947606623173,
+    "is_danish_shop_fake": 0.0,
+    "domain_age_proxy": 0.040546830743551254,
+    "is_new_domain": 0.0
+  }
+}
