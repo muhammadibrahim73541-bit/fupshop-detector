@@ -1,6 +1,7 @@
 import os
 import sys
 
+# Add src to path so 'predict' and other modules are importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from flask import Flask, request, jsonify, render_template
@@ -31,7 +32,6 @@ def predict_endpoint():
     result = predictor.predict(url)
     prob = result['phishing_probability']
     
-    # Generate reasons based on features
     reasons = []
     features = result['features']
     
