@@ -8,12 +8,9 @@ import requests
 import numpy as np
 from features.url_features import URLFeatureExtractor
 
-# Load .env if available, else use hardcoded key
-try:
-    from dotenv import load_dotenv
-    load_dotenv('/workspaces/fupshop-detector/.env')
-except:
-    pass
+# Load .env
+from dotenv import load_dotenv
+load_dotenv('/workspaces/fupshop-detector/.env')
 
 class FupShopPredictor:
     def __init__(self, model_path: str = None):
@@ -24,9 +21,7 @@ class FupShopPredictor:
         with open(model_path.replace('.pkl', '_features.json'), 'r') as f:
             self.feature_names = json.load(f)
         self.extractor = URLFeatureExtractor()
-        # Try env first, then fallback to hardcoded
-        self.openrouter_key = os.getenv('OPENROUTER_KEY') or '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'
-        # Working free model from OpenRouter
+        self.openrouter_key = os.getenv('OPENROUTER_KEY')
         self.llm_model = 'google/gemma-4-31b-it:free'
     
     def predict(self, url: str, cvr: str = None) -> dict:
@@ -35,7 +30,6 @@ class FupShopPredictor:
         prob = self.model.predict_proba(feature_vector)[0][1]
         prediction = "PHISHING" if prob > 0.5 else "LEGITIMATE"
         
-        # Generate LLM reasoning
         llm_reason = self._get_llm_reason(url, features, prediction, prob)
         
         return {
@@ -47,9 +41,8 @@ class FupShopPredictor:
         }
     
     def _get_llm_reason(self, url: str, features: dict, prediction: str, prob: float) -> str:
-        """Get human-readable explanation from LLM"""
         if not self.openrouter_key:
-            return "LLM reasoning not available (no API key)"
+            return "LLM reasoning not available (no API key configured)"
         
         risk_level = "HIGH RISK" if prob > 0.7 else "MEDIUM RISK" if prob > 0.4 else "LOW RISK"
         
@@ -92,7 +85,6 @@ Give a concise, expert explanation for a non-technical user. Focus on the most i
             if response.status_code == 200:
                 data = response.json()
                 content = data['choices'][0]['message']['content'].strip()
-                # Clean up if response is None or empty
                 return content if content else "LLM returned empty response"
             else:
                 return f"LLM error: {response.status_code} - {response.text[:150]}"
