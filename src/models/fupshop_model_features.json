@@ -21,7 +21,13 @@
   "has_fragment",
   "domain_entropy",
   "typosquatting_score",
+  "char_substitution_detected",
   "is_danish_shop_fake",
   "domain_age_proxy",
-  "is_new_domain"
+  "is_new_domain",
+  "has_ssl",
+  "ssl_days_left",
+  "domain_age_days",
+  "cvr_found",
+  "vt_malicious"
 ]

@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import List
+import random
 
 from data_collection.collector import PhishingDataCollector
 from features.url_features import URLFeatureExtractor
@@ -52,40 +53,63 @@ class DatasetBuilder:
         return df
     
     def generate_typosquatting_urls(self, legitimate_urls: List[str], count: int = 200) -> List[str]:
-        """Generate fake typosquatting versions of real shops"""
+        """Generate realistic fake typosquatting versions of real shops"""
         import random
         
         typos = []
-        modifications = [
+        
+        # Subtle modifications that are hard to spot
+        subtle_mods = [
+            # Character substitution (homoglyphs)
+            lambda s: s.replace('a', 'а'),  # Cyrillic а (looks identical)
+            lambda s: s.replace('e', 'е'),  # Cyrillic е
+            lambda s: s.replace('o', 'о'),  # Cyrillic о
+            lambda s: s.replace('p', 'р'),  # Cyrillic р
+            lambda s: s.replace('c', 'с'),  # Cyrillic с
+            # Common typos
             lambda s: s.replace('a', 'aa', 1),
             lambda s: s.replace('e', 'ee', 1),
             lambda s: s.replace('n', 'nn', 1),
-            lambda s: s.replace('g', 'gg', 1),
-            lambda s: s.replace('i', 'j', 1),
             lambda s: s.replace('l', '1', 1),
             lambda s: s.replace('o', '0', 1),
-            lambda s: s.replace('e', '3', 1),
-            lambda s: s + 'dk',
-            lambda s: 'www.' + s,
+            lambda s: s.replace('i', 'j', 1),
+            # Add subtle suffixes/prefixes
+            lambda s: s + '-dk',
             lambda s: s + '-shop',
-            lambda s: s + '-sale',
-            lambda s: s.replace('a', '4', 1),
-            lambda s: s.replace('s', '5', 1),
-            lambda s: s.replace('t', '7', 1),
+            lambda s: s + '-online',
+            lambda s: 'secure-' + s,
+            lambda s: 'login-' + s,
+            # TLD swaps
+            lambda s: s,  # Will add different TLD
         ]
         
-        for _ in range(count):
+        used = set()
+        attempts = 0
+        
+        while len(typos) < count and attempts < count * 10:
+            attempts += 1
+            
             base = random.choice(legitimate_urls)
             domain = base.replace('https://', '').replace('http://', '').replace('www.', '').split('.')[0]
             
-            mod = random.choice(modifications)
+            # Apply 1-2 subtle modifications
+            mod = random.choice(subtle_mods)
             fake = mod(domain)
             
-            tld = random.choice(['.dk', '.com', '.net', '.shop', '.store'])
+            # If no change happened, try another
+            if fake == domain:
+                fake = domain + random.choice(['dk', 'shop', 'store', 'online'])
+            
+            # Add realistic TLD
+            tld = random.choice(['.dk', '.com', '.net', '.shop', '.store', '.online'])
             fake_url = f"https://www.{fake}{tld}"
-            typos.append(fake_url)
+            
+            # Avoid duplicates
+            if fake_url not in used and fake_url not in legitimate_urls:
+                used.add(fake_url)
+                typos.append(fake_url)
         
-        return typos
+        return typos[:count]
     
     def build_synthetic_phishing_dataset(self, legitimate_urls: List[str], count: int = 200) -> pd.DataFrame:
         """Build phishing dataset from SYNTHETIC typosquatting URLs"""

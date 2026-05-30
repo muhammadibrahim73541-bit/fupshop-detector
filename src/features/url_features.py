@@ -1,7 +1,5 @@
 import re
 import math
-import ssl
-import socket
 import requests
 from urllib.parse import urlparse
 from typing import Dict, List
@@ -22,22 +20,36 @@ class URLFeatureExtractor:
         'amazon', 'ebay', 'paypal', 'apple', 'microsoft', 'google', 'facebook',
         'netflix', 'spotify', 'steam', 'playstation', 'roblox', 'nike', 'adidas',
         'zara', 'walmart', 'bestbuy', 'target', 'costco', 'etsy', 'shopify',
-        'dhl', 'usps', 'fedex', 'ups', 'bank', 'chase', 'wellsfargo', 'citi'
+        'dhl', 'usps', 'fedex', 'ups', 'bank', 'chase', 'wellsfargo', 'citi',
+        'samsung', 'lg', 'sony', 'huawei', 'xiaomi', 'oneplus', 'lenovo',
+        'dell', 'hp', 'asus', 'acer', 'intel', 'amd', 'nvidia'
     ]
     
-    DANISH_SHOPS = [
+    ALL_BRANDS = [
         'elgiganten', 'bilka', 'foetex', 'fotex', 'salling', 'matas', 'power',
         'proshop', 'komplett', 'coolshop', 'zalando', 'hm', 'boozt',
         'asos', 'thomann', 'bygma', 'silvan', 'stark', 'jemogfix',
-        'ikea', 'bauhaus', 'xl-byg', 'xlbyg', 'dba', 'guloggratis', 'qxl',
-        'telenor', 'telia', 'yousee', 'borger', 'skat',
-        'virk', 'cvr', 'dr', 'tv2', 'politiken', 'berlingske',
-        'jyllandsposten', 'jp', 'ekstrabladet', 'information',
-        'bt', 'seoghoer', 'billedbladet', 'femina', 'alt',
-        'fck', 'bif', 'fcm', 'agf', 'aab', 'rfc', 'ob', 'sif',
+        'ikea', 'bauhaus', 'xlbyg', 'dba', 'guloggratis', 'qxl',
+        'telenor', 'telia', 'yousee', 'borger', 'skat', 'virk', 'cvr',
+        'dr', 'tv2', 'politiken', 'berlingske', 'jyllandsposten', 'jp',
+        'ekstrabladet', 'information', 'bt', 'seoghoer', 'billedbladet',
+        'femina', 'alt', 'fck', 'bif', 'fcm', 'agf', 'aab', 'rfc', 'ob', 'sif',
         'brondby', 'kobenhavn', 'randers', 'viborg', 'midtjylland',
-        'odense', 'lyngby', 'nordsjaelland', 'horsens', 'silkeborg'
+        'odense', 'lyngby', 'nordsjaelland', 'horsens', 'silkeborg',
+        'samsung', 'apple', 'microsoft', 'google', 'amazon', 'ebay', 'paypal',
+        'netflix', 'spotify', 'facebook', 'instagram', 'twitter', 'linkedin',
+        'youtube', 'tiktok', 'snapchat', 'whatsapp', 'telegram',
+        'steam', 'epicgames', 'playstation', 'xbox', 'nintendo', 'roblox',
+        'riotgames', 'blizzard', 'ubisoft', 'ea', 'activision',
+        'chase', 'bankofamerica', 'wellsfargo', 'citi', 'capitalone',
+        'americanexpress', 'discover', 'schwab', 'fidelity', 'vanguard',
+        'robinhood', 'coinbase', 'binance', 'kraken',
     ]
+    
+    CHAR_SUBSTITUTIONS = {
+        '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's',
+        '7': 't', '8': 'b', '@': 'a', '$': 's',
+    }
     
     def __init__(self):
         self.virustotal_key = os.getenv('VIRUSTOTAL_KEY')
@@ -48,7 +60,11 @@ class URLFeatureExtractor:
         path = parsed.path.lower()
         query = parsed.query.lower()
         
-        # Basic features
+        # Raw domain (for char substitution detection)
+        domain_raw = self._clean_domain(domain)
+        # Normalized (substitutions applied)
+        domain_normalized = self._normalize_domain(domain)
+        
         features = {
             'url_length': len(url),
             'domain_length': len(domain),
@@ -71,30 +87,43 @@ class URLFeatureExtractor:
             'has_query_params': 1 if query else 0,
             'has_fragment': 1 if parsed.fragment else 0,
             'domain_entropy': self._calculate_entropy(domain),
-            'typosquatting_score': self._check_typosquatting(domain),
-            'is_danish_shop_fake': 1 if self._check_typosquatting(domain) > 0.7 else 0,
+            'typosquatting_score': max(
+                self._check_typosquatting(domain_raw),
+                self._check_typosquatting(domain_normalized)
+            ),
+            'char_substitution_detected': 1 if domain_raw != domain_normalized else 0,
+            'is_danish_shop_fake': 1 if self._check_typosquatting(domain_normalized) > 0.7 else 0,
             'domain_age_proxy': self._estimate_domain_age(domain),
             'is_new_domain': 1 if self._estimate_domain_age(domain) < 30 else 0,
         }
         
-        # NEW: Frontend-friendly features
         features['has_ssl'] = features['has_https']
-        features['ssl_days_left'] = 365  # Default, could be enhanced with real SSL check
-        
-        # Domain age in days (from proxy)
+        features['ssl_days_left'] = 365
         features['domain_age_days'] = features['domain_age_proxy']
         
-        # CVR check
         features['cvr_found'] = 0
         if cvr and len(cvr) == 8 and cvr.isdigit():
             features['cvr_found'] = self._check_cvr(cvr)
         
-        # VirusTotal check
         features['vt_malicious'] = 0
         if self.virustotal_key:
             features['vt_malicious'] = self._check_virustotal(domain)
         
         return features
+    
+    def _clean_domain(self, domain: str) -> str:
+        """Remove TLD and www only"""
+        domain = re.sub(r'\.(dk|com|net|org|de|eu|co\.uk|co|shop|store|io|app)$', '', domain)
+        domain = re.sub(r'^www\.', '', domain)
+        return domain.lower()
+    
+    def _normalize_domain(self, domain: str) -> str:
+        """Remove TLD, www, hyphens, and apply char substitutions"""
+        domain = self._clean_domain(domain)
+        domain = domain.replace('-', '')
+        for fake, real in self.CHAR_SUBSTITUTIONS.items():
+            domain = domain.replace(fake, real)
+        return domain.lower()
     
     def _has_ip(self, domain: str) -> bool:
         ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
@@ -113,18 +142,15 @@ class URLFeatureExtractor:
             entropy -= p * math.log2(p)
         return entropy
     
-    def _check_typosquatting(self, domain: str) -> float:
-        domain_clean = re.sub(r'\.(dk|com|net|org|de|eu|co\.uk|co)$', '', domain)
-        domain_clean = re.sub(r'^www\.', '', domain_clean)
-        domain_clean = re.sub(r'[^a-z]', '', domain_clean)
-        
-        if not domain_clean:
+    def _check_typosquatting(self, domain_clean: str) -> float:
+        if not domain_clean or len(domain_clean) < 3:
             return 0.0
         
         min_distance = float('inf')
-        for shop in self.DANISH_SHOPS:
-            shop_clean = re.sub(r'[^a-z]', '', shop)
-            dist = self._levenshtein(domain_clean, shop_clean)
+        
+        for brand in self.ALL_BRANDS:
+            brand_clean = brand.replace('-', '')
+            dist = self._levenshtein(domain_clean, brand_clean)
             if dist < min_distance:
                 min_distance = dist
         
@@ -135,7 +161,9 @@ class URLFeatureExtractor:
         elif min_distance == 2:
             return 0.85
         elif min_distance == 3:
-            return 0.5
+            return 0.6
+        elif min_distance <= 5 and len(domain_clean) > 5:
+            return 0.3
         else:
             return 0.0
     
@@ -174,8 +202,6 @@ class URLFeatureExtractor:
         else: return 365.0
     
     def _check_cvr(self, cvr: str) -> int:
-        """Check CVR number against Danish CVR API (mock for now)"""
-        # Real implementation: call https://cvrapi.dk/
         try:
             response = requests.get(f"https://cvrapi.dk/api?search={cvr}&country=dk", timeout=5)
             if response.status_code == 200:
@@ -186,7 +212,6 @@ class URLFeatureExtractor:
         return 0
     
     def _check_virustotal(self, domain: str) -> int:
-        """Check domain against VirusTotal API"""
         if not self.virustotal_key:
             return 0
         try:
