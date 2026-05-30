@@ -1,8 +1,11 @@
 import re
 import math
+import socket
 import requests
+import whois
+from datetime import datetime
 from urllib.parse import urlparse
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import os
 from dotenv import load_dotenv
 
@@ -60,11 +63,14 @@ class URLFeatureExtractor:
         path = parsed.path.lower()
         query = parsed.query.lower()
         
-        # Raw domain (for char substitution detection)
         domain_raw = self._clean_domain(domain)
-        # Normalized (substitutions applied)
         domain_normalized = self._normalize_domain(domain)
         
+        # DNS + WHOIS checks (DISPLAY ONLY — not used by model)
+        dns_resolved, dns_ip = self._check_dns(domain)
+        whois_age, whois_error = self._get_whois_age(domain)
+        
+        # Model features (same as before — unchanged!)
         features = {
             'url_length': len(url),
             'domain_length': len(domain),
@@ -97,9 +103,13 @@ class URLFeatureExtractor:
             'is_new_domain': 1 if self._estimate_domain_age(domain) < 30 else 0,
         }
         
+        # Frontend display features (NOT used by model)
         features['has_ssl'] = features['has_https']
         features['ssl_days_left'] = 365
-        features['domain_age_days'] = features['domain_age_proxy']
+        features['domain_age_days'] = whois_age if whois_age else features['domain_age_proxy']
+        features['domain_age_real'] = 1 if whois_age else 0
+        features['dns_resolved'] = 1 if dns_resolved else 0
+        features['dns_ip'] = dns_ip if dns_ip else ''
         
         features['cvr_found'] = 0
         if cvr and len(cvr) == 8 and cvr.isdigit():
@@ -111,14 +121,36 @@ class URLFeatureExtractor:
         
         return features
     
+    # ============== DNS & WHOIS (Display Only) ==============
+    def _check_dns(self, domain: str) -> Tuple[bool, str]:
+        """Check if domain resolves via DNS. Returns (resolved, ip)"""
+        try:
+            ip = socket.gethostbyname(domain)
+            return True, ip
+        except socket.gaierror:
+            return False, ''
+    
+    def _get_whois_age(self, domain: str) -> Tuple[float, bool]:
+        """Get real domain age from WHOIS. Returns (age_days, error)"""
+        try:
+            w = whois.whois(domain)
+            creation_date = w.creation_date
+            if isinstance(creation_date, list):
+                creation_date = creation_date[0]
+            if creation_date:
+                age_days = (datetime.now() - creation_date).days
+                return age_days, False
+        except:
+            pass
+        return None, True
+    
+    # ============== Model Features (Unchanged) ==============
     def _clean_domain(self, domain: str) -> str:
-        """Remove TLD and www only"""
         domain = re.sub(r'\.(dk|com|net|org|de|eu|co\.uk|co|shop|store|io|app)$', '', domain)
         domain = re.sub(r'^www\.', '', domain)
         return domain.lower()
     
     def _normalize_domain(self, domain: str) -> str:
-        """Remove TLD, www, hyphens, and apply char substitutions"""
         domain = self._clean_domain(domain)
         domain = domain.replace('-', '')
         for fake, real in self.CHAR_SUBSTITUTIONS.items():

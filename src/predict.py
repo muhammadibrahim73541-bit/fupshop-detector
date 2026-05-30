@@ -43,4 +43,6 @@ if __name__ == "__main__":
     print(f"\nURL: {result['url']}")
     print(f"Prediction: {result['prediction']}")
     print(f"Phishing Probability: {result['phishing_probability']:.4f}")
-    print(f"Features: {result['features']}")
+    print(f"DNS Resolved: {bool(result['features']['dns_resolved'])}")
+    print(f"WHOIS Real Age: {result['features']['domain_age_days']:.0f} days")
+    print(f"Typosquatting: {result['features']['typosquatting_score']}")
