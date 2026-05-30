@@ -17,8 +17,8 @@ class FupShopPredictor:
             self.feature_names = json.load(f)
         self.extractor = URLFeatureExtractor()
     
-    def predict(self, url: str) -> dict:
-        features = self.extractor.extract(url)
+    def predict(self, url: str, cvr: str = None) -> dict:
+        features = self.extractor.extract(url, cvr=cvr)
         feature_vector = np.array([[features[name] for name in self.feature_names]])
         prob = self.model.predict_proba(feature_vector)[0][1]
         prediction = "PHISHING" if prob > 0.5 else "LEGITIMATE"
@@ -32,13 +32,15 @@ class FupShopPredictor:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python predict.py <URL>")
+        print("Usage: python predict.py <URL> [CVR]")
         sys.exit(1)
     
     url = sys.argv[1]
+    cvr = sys.argv[2] if len(sys.argv) > 2 else None
     predictor = FupShopPredictor()
-    result = predictor.predict(url)
+    result = predictor.predict(url, cvr=cvr)
     
     print(f"\nURL: {result['url']}")
     print(f"Prediction: {result['prediction']}")
     print(f"Phishing Probability: {result['phishing_probability']:.4f}")
+    print(f"Features: {result['features']}")

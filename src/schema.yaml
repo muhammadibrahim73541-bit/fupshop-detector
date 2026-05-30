@@ -1,0 +1,85 @@
+# Data Validation Schema for FupShop Detector
+
+dataset:
+  name: "fupshop_training_data"
+  version: "1.0"
+  
+  columns:
+    - name: "url"
+      type: "string"
+      nullable: false
+      description: "The URL being analyzed"
+    
+    - name: "label"
+      type: "integer"
+      nullable: false
+      enum: [0, 1]
+      description: "0 = Legitimate, 1 = Phishing"
+    
+    - name: "url_length"
+      type: "float"
+      nullable: false
+      range: [0, 2000]
+    
+    - name: "domain_length"
+      type: "float"
+      nullable: false
+      range: [0, 500]
+    
+    - name: "has_https"
+      type: "float"
+      nullable: false
+      enum: [0.0, 1.0]
+    
+    - name: "has_ip_address"
+      type: "float"
+      nullable: false
+      enum: [0.0, 1.0]
+    
+    - name: "suspicious_keyword_count"
+      type: "float"
+      nullable: false
+      range: [0, 50]
+    
+    - name: "brand_in_domain"
+      type: "float"
+      nullable: false
+      enum: [0.0, 1.0]
+    
+    - name: "domain_entropy"
+      type: "float"
+      nullable: false
+      range: [0, 10]
+    
+    - name: "typosquatting_score"
+      type: "float"
+      nullable: false
+      range: [0, 1]
+
+  constraints:
+    - "label must be 0 or 1"
+    - "url must start with http:// or https://"
+    - "At least 100 samples per class for training"
+    - "No duplicate URLs allowed"
+
+model:
+  name: "fupshop_xgboost"
+  type: "XGBoostClassifier"
+  version: "1.0"
+  
+  hyperparameters:
+    n_estimators: 300
+    max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.7
+    colsample_bytree: 0.7
+  
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+  
+  thresholds:
+    phishing_probability: 0.5

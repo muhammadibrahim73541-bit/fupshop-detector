@@ -1,7 +1,7 @@
 import os
 import sys
+import uuid
 
-# Add src to path so 'predict' and other modules are importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from flask import Flask, request, jsonify, render_template
@@ -22,6 +22,7 @@ def home():
 def predict_endpoint():
     data = request.get_json() or request.form
     url = data.get('url', '').strip()
+    cvr = data.get('cvr', '').strip()
     
     if not url:
         return jsonify({"error": "URL required"}), 400
@@ -29,45 +30,72 @@ def predict_endpoint():
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
     
-    result = predictor.predict(url)
+    result = predictor.predict(url, cvr=cvr if cvr else None)
     prob = result['phishing_probability']
-    
-    reasons = []
     features = result['features']
     
-    if not features['has_https']:
-        reasons.append({"icon": "🔒", "title": "No SSL Certificate", "desc": "Connection not encrypted"})
+    # Map to frontend-friendly prediction
+    risk_score = prob * 100
+    if risk_score < 30:
+        prediction = 'SAFE'
+    elif risk_score < 70:
+        prediction = 'CAUTION'
+    else:
+        prediction = 'AVOID'
     
-    if features['has_ip_address']:
-        reasons.append({"icon": "🌐", "title": "IP Address URL", "desc": "Uses raw IP instead of domain"})
+    # Generate SHAP-style reasons
+    reasons = []
+    
+    if not features['has_ssl']:
+        reasons.append("No SSL certificate — data transmitted in plaintext")
+    else:
+        reasons.append("SSL certificate present — connection is encrypted")
+    
+    if features['typosquatting_score'] > 0.7:
+        reasons.append(f"Domain closely resembles a known Danish shop (typosquatting score: {features['typosquatting_score']:.2f})")
+    
+    if features['is_new_domain']:
+        reasons.append(f"Domain appears very new ({features['domain_age_days']:.0f} days estimated)")
+    elif features['domain_age_days'] > 365:
+        reasons.append(f"Domain is well-established ({features['domain_age_days']:.0f} days old)")
     
     if features['suspicious_keyword_count'] > 0:
-        reasons.append({"icon": "⚠️", "title": "Suspicious Keywords", "desc": f"Found {int(features['suspicious_keyword_count'])} suspicious terms"})
+        reasons.append(f"Contains {int(features['suspicious_keyword_count'])} suspicious keywords (login, verify, etc.)")
+    
+    if features['has_ip_address']:
+        reasons.append("Uses raw IP address instead of domain name")
     
     if features['multiple_subdomains']:
-        reasons.append({"icon": "📁", "title": "Multiple Subdomains", "desc": "Unusual subdomain structure"})
+        reasons.append("Unusual subdomain structure detected")
     
     if features['domain_entropy'] > 3.5:
-        reasons.append({"icon": "🔀", "title": "High Domain Entropy", "desc": "Domain appears randomly generated"})
+        reasons.append("High domain randomness — possibly auto-generated")
     
-    if features['brand_in_domain'] or features['brand_in_path']:
-        reasons.append({"icon": "🏷️", "title": "Brand Impersonation", "desc": "Contains well-known brand names"})
+    if features['cvr_found']:
+        reasons.append("CVR number verified in Danish company registry")
+    elif cvr:
+        reasons.append("CVR number not found in registry")
     
-    if features['dot_count'] > 4:
-        reasons.append({"icon": "•••", "title": "Many Dots", "desc": f"{int(features['dot_count'])} dots in URL (suspicious)"})
+    if features['vt_malicious'] > 0:
+        reasons.append(f"Flagged by {int(features['vt_malicious'])} security engines on VirusTotal")
     
     if not reasons:
-        reasons.append({"icon": "✅", "title": "Clean URL Structure", "desc": "No obvious red flags detected"})
-    
-    risk_score = prob * 100
+        reasons.append("No significant risk factors detected")
     
     return jsonify({
         "url": result['url'],
         "domain": url.replace('https://', '').replace('http://', '').split('/')[0],
         "risk_score": round(risk_score, 1),
-        "prediction": "HIGH RISK" if risk_score > 70 else "MEDIUM RISK" if risk_score > 40 else "LOW RISK",
-        "top_reasons": reasons[:4],
-        "features": {k: round(v, 3) for k, v in features.items()}
+        "prediction": prediction,
+        "features": {
+            "has_ssl": features['has_ssl'],
+            "ssl_days_left": features['ssl_days_left'],
+            "cvr_found": features['cvr_found'],
+            "domain_age_days": features['domain_age_days'],
+            "vt_malicious": features['vt_malicious']
+        },
+        "reasons": reasons,
+        "scan_id": str(uuid.uuid4())[:8]
     })
 
 @app.route('/health')
