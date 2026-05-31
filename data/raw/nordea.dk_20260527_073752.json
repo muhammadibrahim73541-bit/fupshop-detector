@@ -1,0 +1,37 @@
+{
+  "url": "https://nordea.dk",
+  "domain": "nordea.dk",
+  "cvr_data": {
+    "name": null,
+    "address": null,
+    "zipcode": null,
+    "city": null,
+    "phone": null,
+    "email": null,
+    "employees": null,
+    "company_age_days": null,
+    "status": null,
+    "source": "cvrapi"
+  },
+  "whois": {
+    "domain_age_days": 9477,
+    "registrar": null,
+    "expiration_date": "2026-06-30 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": false,
+    "valid": false,
+    "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1000)"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 59,
+    "undetected": 32,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-27T07:37:52.041812"
+}

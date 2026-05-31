@@ -1,0 +1,63 @@
+wandb_version: 1
+
+model:
+  desc: null
+  value: XGBoost
+features:
+  desc: null
+  value:
+  - domain_age_days
+  - has_ssl
+  - ssl_valid
+  - cvr_found
+  - company_age_days
+  - has_employees
+  - vt_malicious
+  - vt_suspicious
+  - vt_reputation
+  - is_dk_domain
+  - ssl_days_left
+  - has_registrar
+  - domain_very_new
+dataset_size:
+  desc: null
+  value: 30
+scam_count:
+  desc: null
+  value: 0
+legit_count:
+  desc: null
+  value: 30
+sources:
+  desc: null
+  value:
+  - established_retailer
+_wandb:
+  desc: null
+  value:
+    python_version: 3.12.1
+    cli_version: 0.17.0
+    framework: xgboost
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1779949900
+    t:
+      1:
+      - 5
+      - 6
+      - 53
+      - 55
+      2:
+      - 5
+      - 6
+      - 53
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.12.1
+      5: 0.17.0
+      8:
+      - 5
+      13: linux-x86_64

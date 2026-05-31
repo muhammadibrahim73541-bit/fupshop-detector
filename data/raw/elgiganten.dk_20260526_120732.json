@@ -1,0 +1,27 @@
+{
+  "url": "https://elgiganten.dk",
+  "domain": "elgiganten.dk",
+  "cvr_data": null,
+  "whois": {
+    "domain_age_days": 10416,
+    "registrar": null,
+    "expiration_date": "2026-12-31 00:00:00",
+    "source": "whois"
+  },
+  "ssl": {
+    "has_ssl": true,
+    "valid": true,
+    "days_until_expiry": 73,
+    "issuer": "((('countryName', 'US'),), (('organizationName', \"Let's Encrypt\"),), (('commonName', 'R13'),))"
+  },
+  "virustotal": {
+    "checked": true,
+    "malicious": 0,
+    "suspicious": 0,
+    "harmless": 59,
+    "undetected": 32,
+    "total": 91,
+    "reputation": 0
+  },
+  "timestamp": "2026-05-26T12:07:32.119134"
+}

@@ -1,0 +1,50 @@
+{
+    "os": "Linux-6.8.0-1044-azure-x86_64-with-glibc2.39",
+    "python": "3.12.1",
+    "heartbeatAt": "2026-05-26T11:07:10.578010",
+    "startedAt": "2026-05-26T11:07:09.421486",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/workspaces/fupshop-detector/src/model_trainer.py",
+    "codePathLocal": "model_trainer.py",
+    "codePath": "src/model_trainer.py",
+    "git": {
+        "remote": "https://github.com/muhammadibrahim73541-bit/fupshop-detector",
+        "commit": "2d1351440cdfbc1a41aff8eccad2a3a3c48b6451"
+    },
+    "email": "muhammadibrahim73541@gmail.com",
+    "root": "/workspaces/fupshop-detector",
+    "host": "codespaces-65266a",
+    "username": "codespace",
+    "executable": "/home/codespace/.python/current/bin/python",
+    "cpu_count": 1,
+    "cpu_count_logical": 2,
+    "cpu_freq": {
+        "current": 3490.348,
+        "min": 800.0,
+        "max": 2800.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3391.962,
+            "min": 800.0,
+            "max": 2800.0
+        },
+        {
+            "current": 3392.643,
+            "min": 800.0,
+            "max": 2800.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 31.32598876953125,
+            "used": 11.531318664550781
+        }
+    },
+    "memory": {
+        "total": 7.757392883300781
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "url": "https://example.dk",
+  "domain": "example.dk",
+  "cvr_data": {
+    "error": "QUOTA_EXCEEDED",
+    "message": "Your quota has been exceeded. Reach out if you are certain this is a error. https://cvrapi.dk/contact",
+    "ip": "20.61.126.216"
+  },
+  "whois": {
+    "creation_date": "2000-06-16 00:00:00",
+    "registrar": null,
+    "expiration_date": "2026-06-30 00:00:00"
+  },
+  "ssl": {
+    "has_ssl": false,
+    "error": "timed out"
+  },
+  "urlvoid": {
+    "blocklisted": null,
+    "note": "No API key configured"
+  },
+  "timestamp": "2026-05-24T22:18:27.204343"
+}
