@@ -1,265 +1,233 @@
 import re
-import math
 import socket
+import ssl
+import math
 import requests
-import whois
-from datetime import datetime
-from urllib.parse import urlparse
-from typing import Dict, List, Tuple
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from urllib.parse import urlparse
+from datetime import datetime
 
 class URLFeatureExtractor:
-    SUSPICIOUS_KEYWORDS = [
-        'login', 'signin', 'verify', 'account', 'update', 'secure', 'banking',
-        'confirm', 'password', 'credential', 'authenticate', 'wallet', 'payment',
-        'billing', 'invoice', 'refund', 'suspended', 'locked', 'limited',
-        'alert', 'warning', 'fraud', 'suspicious', 'unusual', 'activity'
-    ]
-    
-    BRAND_NAMES = [
-        'amazon', 'ebay', 'paypal', 'apple', 'microsoft', 'google', 'facebook',
-        'netflix', 'spotify', 'steam', 'playstation', 'roblox', 'nike', 'adidas',
-        'zara', 'walmart', 'bestbuy', 'target', 'costco', 'etsy', 'shopify',
-        'dhl', 'usps', 'fedex', 'ups', 'bank', 'chase', 'wellsfargo', 'citi',
-        'samsung', 'lg', 'sony', 'huawei', 'xiaomi', 'oneplus', 'lenovo',
-        'dell', 'hp', 'asus', 'acer', 'intel', 'amd', 'nvidia'
-    ]
-    
-    ALL_BRANDS = [
-        'elgiganten', 'bilka', 'foetex', 'fotex', 'salling', 'matas', 'power',
-        'proshop', 'komplett', 'coolshop', 'zalando', 'hm', 'boozt',
-        'asos', 'thomann', 'bygma', 'silvan', 'stark', 'jemogfix',
-        'ikea', 'bauhaus', 'xlbyg', 'dba', 'guloggratis', 'qxl',
-        'telenor', 'telia', 'yousee', 'borger', 'skat', 'virk', 'cvr',
-        'dr', 'tv2', 'politiken', 'berlingske', 'jyllandsposten', 'jp',
-        'ekstrabladet', 'information', 'bt', 'seoghoer', 'billedbladet',
-        'femina', 'alt', 'fck', 'bif', 'fcm', 'agf', 'aab', 'rfc', 'ob', 'sif',
-        'brondby', 'kobenhavn', 'randers', 'viborg', 'midtjylland',
-        'odense', 'lyngby', 'nordsjaelland', 'horsens', 'silkeborg',
-        'samsung', 'apple', 'microsoft', 'google', 'amazon', 'ebay', 'paypal',
-        'netflix', 'spotify', 'facebook', 'instagram', 'twitter', 'linkedin',
-        'youtube', 'tiktok', 'snapchat', 'whatsapp', 'telegram',
-        'steam', 'epicgames', 'playstation', 'xbox', 'nintendo', 'roblox',
-        'riotgames', 'blizzard', 'ubisoft', 'ea', 'activision',
-        'chase', 'bankofamerica', 'wellsfargo', 'citi', 'capitalone',
-        'americanexpress', 'discover', 'schwab', 'fidelity', 'vanguard',
-        'robinhood', 'coinbase', 'binance', 'kraken',
-    ]
-    
-    CHAR_SUBSTITUTIONS = {
-        '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's',
-        '7': 't', '8': 'b', '@': 'a', '$': 's',
-    }
-    
     def __init__(self):
-        self.virustotal_key = os.getenv('VIRUSTOTAL_KEY')
+        self.suspicious_keywords = [
+            'login', 'verify', 'secure', 'account', 'update', 'confirm',
+            'bank', 'payment', 'password', 'credential', 'authenticate',
+            'signin', 'signup', 'security', 'alert', 'suspend', 'restrict',
+            'validate', 'authenticate', 'billing', 'invoice', 'order'
+        ]
+        self.known_brands = [
+            'paypal', 'apple', 'microsoft', 'amazon', 'google', 'facebook',
+            'netflix', 'spotify', 'ebay', 'alibaba', 'bilka', 'elgiganten',
+            'matas', 'zalando', 'power', 'proshop', 'salling', 'foetex',
+            'lego', 'ikea', 'jysk', 'danskebank', 'nordea', 'jyskebank',
+            'saxo', 'ticketmaster', 'viagogo', 'magasin', 'rema1000',
+            'netto', 'lidl', 'aldi', 'haraldnyborg', 'silvan', 'thansen',
+            'bogide', 'hay', 'georgjensen', 'royalcopenhagen', 'normann',
+            'designletters', 'illums', 'bahne'
+        ]
     
-    def extract(self, url: str, cvr: str = None) -> Dict[str, float]:
-        parsed = urlparse(url)
-        domain = parsed.netloc.lower()
-        path = parsed.path.lower()
-        query = parsed.query.lower()
+    def extract(self, url: str, cvr: str = None) -> dict:
+        parsed = urlparse(url if url.startswith('http') else f'https://{url}')
+        domain = parsed.netloc or parsed.path
+        if domain.startswith('www.'):
+            domain = domain[4:]
         
-        domain_raw = self._clean_domain(domain)
-        domain_normalized = self._normalize_domain(domain)
-        
-        # DNS + WHOIS checks (DISPLAY ONLY — not used by model)
+        # DNS Resolution with IP display
         dns_resolved, dns_ip = self._check_dns(domain)
-        whois_age, whois_error = self._get_whois_age(domain)
         
-        # Model features (same as before — unchanged!)
+        # WHOIS with RDAP fallback
+        domain_age_days, domain_age_real, whois_details = self._check_whois_with_rdap(domain)
+        
+        # SSL
+        has_ssl, ssl_days_left = self._check_ssl(domain)
+        
+        # Typosquatting
+        typosquatting_score, char_sub = self._check_typosquatting(domain)
+        
+        # VirusTotal
+        vt_malicious = self._check_virustotal(domain)
+        
+        # CVR
+        cvr_found = self._check_cvr(domain, cvr) if cvr else 0
+        
         features = {
             'url_length': len(url),
             'domain_length': len(domain),
-            'path_length': len(path),
-            'query_length': len(query),
+            'path_length': len(parsed.path),
+            'query_length': len(parsed.query),
             'dot_count': url.count('.'),
             'hyphen_count': url.count('-'),
             'underscore_count': url.count('_'),
             'slash_count': url.count('/'),
             'digit_count': sum(c.isdigit() for c in url),
-            'special_char_count': sum(not c.isalnum() for c in url),
-            'has_https': 1 if url.startswith('https://') else 0,
-            'has_ip_address': 1 if self._has_ip(domain) else 0,
-            'has_port': 1 if ':' in domain else 0,
-            'suspicious_keyword_count': sum(1 for k in self.SUSPICIOUS_KEYWORDS if k in url.lower()),
-            'brand_in_domain': 1 if any(b in domain for b in self.BRAND_NAMES) else 0,
-            'brand_in_path': 1 if any(b in path for b in self.BRAND_NAMES) else 0,
+            'special_char_count': len([c for c in url if not c.isalnum() and c not in './-']),
+            'has_https': 1 if parsed.scheme == 'https' else 0,
+            'has_ip_address': 1 if re.match(r'\d+\.\d+\.\d+\.\d+', domain) else 0,
+            'has_port': 1 if parsed.port else 0,
+            'suspicious_keyword_count': sum(1 for kw in self.suspicious_keywords if kw in url.lower()),
+            'brand_in_domain': 1 if any(brand in domain.lower() for brand in self.known_brands) else 0,
+            'brand_in_path': 1 if any(brand in parsed.path.lower() for brand in self.known_brands) else 0,
             'multiple_subdomains': 1 if domain.count('.') > 2 else 0,
-            'path_depth': path.count('/'),
-            'has_query_params': 1 if query else 0,
+            'path_depth': parsed.path.count('/'),
+            'has_query_params': 1 if parsed.query else 0,
             'has_fragment': 1 if parsed.fragment else 0,
-            'domain_entropy': self._calculate_entropy(domain),
-            'typosquatting_score': max(
-                self._check_typosquatting(domain_raw),
-                self._check_typosquatting(domain_normalized)
-            ),
-            'char_substitution_detected': 1 if domain_raw != domain_normalized else 0,
-            'is_danish_shop_fake': 1 if self._check_typosquatting(domain_normalized) > 0.7 else 0,
-            'domain_age_proxy': self._estimate_domain_age(domain),
-            'is_new_domain': 1 if self._estimate_domain_age(domain) < 30 else 0,
+            'domain_entropy': self._compute_entropy(domain),
+            'typosquatting_score': typosquatting_score,
+            'char_substitution_detected': char_sub,
+            'is_danish_shop_fake': self._is_fake_danish_shop(domain),
+            'domain_age_proxy': self._estimate_domain_age_proxy(domain),
+            'is_new_domain': 1 if domain_age_days < 30 else 0,
+            'has_ssl': has_ssl,
+            'ssl_days_left': ssl_days_left,
+            'domain_age_days': domain_age_days,
+            'domain_age_real': domain_age_real,
+            'dns_resolved': dns_resolved,
+            'dns_ip': dns_ip,
+            'cvr_found': cvr_found,
+            'vt_malicious': vt_malicious,
         }
-        
-        # Frontend display features (NOT used by model)
-        features['has_ssl'] = features['has_https']
-        features['ssl_days_left'] = 365
-        features['domain_age_days'] = whois_age if whois_age else features['domain_age_proxy']
-        features['domain_age_real'] = 1 if whois_age else 0
-        features['dns_resolved'] = 1 if dns_resolved else 0
-        features['dns_ip'] = dns_ip if dns_ip else ''
-        
-        features['cvr_found'] = 0
-        if cvr and len(cvr) == 8 and cvr.isdigit():
-            features['cvr_found'] = self._check_cvr(cvr)
-        
-        features['vt_malicious'] = 0
-        if self.virustotal_key:
-            features['vt_malicious'] = self._check_virustotal(domain)
-        
         return features
     
-    # ============== DNS & WHOIS (Display Only) ==============
-    def _check_dns(self, domain: str) -> Tuple[bool, str]:
-        """Check if domain resolves via DNS. Returns (resolved, ip)"""
+    def _check_dns(self, domain: str) -> tuple:
+        """Resolve domain to IP address"""
         try:
             ip = socket.gethostbyname(domain)
-            return True, ip
-        except socket.gaierror:
-            return False, ''
+            return 1, ip
+        except:
+            return 0, "N/A"
     
-    def _get_whois_age(self, domain: str) -> Tuple[float, bool]:
-        """Get real domain age from WHOIS. Returns (age_days, error)"""
+    def _check_whois_with_rdap(self, domain: str) -> tuple:
+        """Check WHOIS using python-whois first, fallback to RDAP API"""
+        # Try python-whois first
         try:
+            import whois
             w = whois.whois(domain)
-            creation_date = w.creation_date
-            if isinstance(creation_date, list):
-                creation_date = creation_date[0]
-            if creation_date:
-                age_days = (datetime.now() - creation_date).days
-                return age_days, False
+            if w.creation_date:
+                creation = w.creation_date[0] if isinstance(w.creation_date, list) else w.creation_date
+                if isinstance(creation, datetime):
+                    age_days = (datetime.now() - creation).days
+                    return age_days, 1, {"registrar": str(w.registrar), "creation_date": str(creation)}
         except:
             pass
-        return None, True
-    
-    # ============== Model Features (Unchanged) ==============
-    def _clean_domain(self, domain: str) -> str:
-        domain = re.sub(r'\.(dk|com|net|org|de|eu|co\.uk|co|shop|store|io|app)$', '', domain)
-        domain = re.sub(r'^www\.', '', domain)
-        return domain.lower()
-    
-    def _normalize_domain(self, domain: str) -> str:
-        domain = self._clean_domain(domain)
-        domain = domain.replace('-', '')
-        for fake, real in self.CHAR_SUBSTITUTIONS.items():
-            domain = domain.replace(fake, real)
-        return domain.lower()
-    
-    def _has_ip(self, domain: str) -> bool:
-        ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
-        return bool(re.match(ip_pattern, domain))
-    
-    def _calculate_entropy(self, text: str) -> float:
-        if not text:
-            return 0.0
-        freq = {}
-        for char in text:
-            freq[char] = freq.get(char, 0) + 1
-        entropy = 0.0
-        length = len(text)
-        for count in freq.values():
-            p = count / length
-            entropy -= p * math.log2(p)
-        return entropy
-    
-    def _check_typosquatting(self, domain_clean: str) -> float:
-        if not domain_clean or len(domain_clean) < 3:
-            return 0.0
         
-        min_distance = float('inf')
-        
-        for brand in self.ALL_BRANDS:
-            brand_clean = brand.replace('-', '')
-            dist = self._levenshtein(domain_clean, brand_clean)
-            if dist < min_distance:
-                min_distance = dist
-        
-        if min_distance == 0:
-            return 0.0
-        elif min_distance == 1:
-            return 0.95
-        elif min_distance == 2:
-            return 0.85
-        elif min_distance == 3:
-            return 0.6
-        elif min_distance <= 5 and len(domain_clean) > 5:
-            return 0.3
-        else:
-            return 0.0
-    
-    def _levenshtein(self, s1: str, s2: str) -> int:
-        if len(s1) < len(s2):
-            return self._levenshtein(s2, s1)
-        if len(s2) == 0:
-            return len(s1)
-        previous_row = range(len(s2) + 1)
-        for i, c1 in enumerate(s1):
-            current_row = [i + 1]
-            for j, c2 in enumerate(s2):
-                insertions = previous_row[j + 1] + 1
-                deletions = current_row[j] + 1
-                substitutions = previous_row[j] + (c1 != c2)
-                current_row.append(min(insertions, deletions, substitutions))
-            previous_row = current_row
-        return previous_row[-1]
-    
-    def _estimate_domain_age(self, domain: str) -> float:
-        entropy = self._calculate_entropy(domain)
-        domain_no_tld = re.sub(r'\.(dk|com|net|org|de|eu|co\.uk)$', '', domain)
-        has_random_pattern = bool(re.search(r'[a-z]{2}[0-9]{2,}|[0-9]{2,}[a-z]{2}', domain_no_tld))
-        has_many_hyphens = domain_no_tld.count('-') > 2
-        is_long = len(domain_no_tld) > 25
-        
-        score = 0
-        if entropy > 3.8: score += 1
-        if has_random_pattern: score += 1
-        if has_many_hyphens: score += 1
-        if is_long: score += 1
-        
-        if score >= 3: return 7.0
-        elif score >= 2: return 30.0
-        elif score >= 1: return 90.0
-        else: return 365.0
-    
-    def _check_cvr(self, cvr: str) -> int:
+        # Fallback to RDAP (HTTPS-based, works in containers)
         try:
-            response = requests.get(f"https://cvrapi.dk/api?search={cvr}&country=dk", timeout=5)
+            rdap_url = f"https://rdap.org/domain/{domain}"
+            response = requests.get(rdap_url, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                return 1 if data.get('vat') else 0
+                for event in data.get('events', []):
+                    if event.get('eventAction') == 'registration':
+                        reg_date = event.get('eventDate', '')
+                        if reg_date:
+                            creation = datetime.fromisoformat(reg_date.replace('Z', '+00:00'))
+                            age_days = (datetime.now() - creation).days
+                            registrar = "Unknown"
+                            for entity in data.get('entities', []):
+                                if 'registrar' in entity.get('roles', []):
+                                    vcard = entity.get('vcardArray', [])
+                                    if len(vcard) > 1:
+                                        for item in vcard[1]:
+                                            if item[0] == 'fn':
+                                                registrar = item[3]
+                                                break
+                            return age_days, 1, {"registrar": registrar, "creation_date": reg_date, "source": "RDAP"}
         except:
             pass
-        return 0
+        
+        return 365, 0, {"error": "WHOIS and RDAP both failed"}
+    
+    def _check_ssl(self, domain: str) -> tuple:
+        try:
+            context = ssl.create_default_context()
+            with socket.create_connection((domain, 443), timeout=5) as sock:
+                with context.wrap_socket(sock, server_hostname=domain) as ssock:
+                    cert = ssock.getpeercert()
+                    not_after = cert.get('notAfter', '')
+                    if not_after:
+                        expiry = ssl.cert_time_to_seconds(not_after)
+                        days_left = int((expiry - datetime.now().timestamp()) / 86400)
+                        return 1, max(0, days_left)
+        except:
+            return 0, 0
+    
+    def _compute_entropy(self, domain: str) -> float:
+        from collections import Counter
+        domain = re.sub(r'[^a-zA-Z0-9]', '', domain)
+        if not domain:
+            return 0
+        counts = Counter(domain)
+        length = len(domain)
+        entropy = -sum((count/length) * math.log2(count/length) for count in counts.values())
+        return entropy
+    
+    def _check_typosquatting(self, domain: str) -> tuple:
+        domain_clean = re.sub(r'[^a-zA-Z0-9]', '', domain.lower())
+        max_score = 0
+        char_sub = 0
+        
+        for brand in self.known_brands:
+            brand_clean = re.sub(r'[^a-zA-Z0-9]', '', brand.lower())
+            if not brand_clean:
+                continue
+            
+            m, n = len(domain_clean), len(brand_clean)
+            dp = [[0]*(n+1) for _ in range(m+1)]
+            for i in range(m+1): dp[i][0] = i
+            for j in range(n+1): dp[0][j] = j
+            for i in range(1, m+1):
+                for j in range(1, n+1):
+                    cost = 0 if domain_clean[i-1] == brand_clean[j-1] else 1
+                    dp[i][j] = min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost)
+            
+            dist = dp[m][n]
+            max_len = max(m, n)
+            if max_len > 0:
+                similarity = 1 - (dist / max_len)
+                max_score = max(max_score, similarity)
+        
+        sub_patterns = {'1': 'l', '0': 'o', 'rn': 'm', 'vv': 'w'}
+        for sub, orig in sub_patterns.items():
+            if sub in domain_clean and orig not in domain_clean:
+                char_sub = 1
+                break
+        
+        return max_score, char_sub
+    
+    def _is_fake_danish_shop(self, domain: str) -> int:
+        danish_indicators = ['.dk', 'danmark', 'dansk']
+        fake_indicators = ['-dk', 'danmark-', 'dansk-']
+        has_danish = any(ind in domain.lower() for ind in danish_indicators)
+        has_fake = any(ind in domain.lower() for ind in fake_indicators)
+        return 1 if (has_danish and has_fake) else 0
+    
+    def _estimate_domain_age_proxy(self, domain: str) -> int:
+        parts = domain.split('.')
+        tld = parts[-1] if len(parts) > 1 else ''
+        if tld in ['com', 'net', 'org']:
+            return 1000
+        elif tld == 'dk':
+            return 500
+        return 365
     
     def _check_virustotal(self, domain: str) -> int:
-        if not self.virustotal_key:
-            return 0
         try:
-            headers = {"x-apikey": self.virustotal_key}
-            response = requests.get(
-                f"https://www.virustotal.com/api/v3/domains/{domain}",
-                headers=headers,
-                timeout=10
-            )
+            api_key = os.getenv('VIRUSTOTAL_KEY')
+            if not api_key:
+                return 0
+            url = f"https://www.virustotal.com/api/v3/domains/{domain}"
+            headers = {"x-apikey": api_key}
+            response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 stats = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {})
-                return stats.get('malicious', 0)
+                return stats.get('malicious', 0) + stats.get('suspicious', 0)
         except:
-            pass
+            return 0
         return 0
     
-    def extract_batch(self, urls: List[str]) -> List[Dict[str, float]]:
-        return [self.extract(url) for url in urls]
+    def _check_cvr(self, domain: str, cvr: str) -> int:
+        try:
+            return 1 if len(cvr) == 8 and cvr.isdigit() else 0
+        except:
+            return 0

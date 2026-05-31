@@ -239,7 +239,7 @@
                     details.push({icon: 'bi-unlock-fill', iconClass: 'icon-danger', title: 'No SSL', desc: 'Plaintext connection'});
                 }
                 if (data.features.dns_resolved) {
-                    details.push({icon: 'bi-globe', iconClass: 'icon-safe', title: 'DNS Resolved', desc: 'Domain exists'});
+                    details.push({icon: 'bi-globe', iconClass: 'icon-safe', title: 'DNS Resolved', desc: `IP: ${data.features.dns_ip}`});
                 } else {
                     details.push({icon: 'bi-globe', iconClass: 'icon-caution', title: 'DNS Failed', desc: 'May not exist'});
                 }
