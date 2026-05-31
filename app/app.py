@@ -5,12 +5,20 @@ import uuid
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from flask import Flask, request, jsonify, render_template
-from predict import FupShopPredictor
+from predict import FupShopPredictor, download_model_if_needed
 
 app = Flask(__name__, template_folder='templates')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, 'src', 'models', 'fupshop_model.pkl')
+
+# Download model if not present (for HF Spaces deployment)
+if not os.path.exists(MODEL_PATH):
+    try:
+        download_model_if_needed()
+    except Exception as e:
+        print(f"Warning: Could not download model: {e}")
+        print("App will fail on first prediction if model is missing.")
 
 predictor = FupShopPredictor(model_path=MODEL_PATH)
 
@@ -33,17 +41,21 @@ def predict_endpoint():
     result = predictor.predict(url, cvr=cvr if cvr else None)
     prob = result['phishing_probability']
     features = result['features']
+    llm_reason = result['llm_reasoning']
     
-    # Map to frontend-friendly prediction
+    # Risk level
     risk_score = prob * 100
     if risk_score < 30:
-        prediction = 'SAFE'
+        risk_level = 'SAFE'
+        color = 'green'
     elif risk_score < 70:
-        prediction = 'CAUTION'
+        risk_level = 'CAUTION'
+        color = 'gold'
     else:
-        prediction = 'AVOID'
+        risk_level = 'DANGER'
+        color = 'red'
     
-    # Generate SHAP-style reasons
+    # Technical reasons
     reasons = []
     
     if not features['has_ssl']:
@@ -53,14 +65,22 @@ def predict_endpoint():
     
     if features['typosquatting_score'] > 0.7:
         reasons.append(f"Domain closely resembles a known Danish shop (typosquatting score: {features['typosquatting_score']:.2f})")
+    elif features['typosquatting_score'] > 0.3:
+        reasons.append(f"Domain similar to known brand (typosquatting score: {features['typosquatting_score']:.2f})")
     
-    if features['is_new_domain']:
-        reasons.append(f"Domain appears very new ({features['domain_age_days']:.0f} days estimated)")
-    elif features['domain_age_days'] > 365:
-        reasons.append(f"Domain is well-established ({features['domain_age_days']:.0f} days old)")
+    if features['domain_age_real']:
+        if features['domain_age_days'] > 3650:
+            reasons.append(f"Domain is well-established ({features['domain_age_days']:.0f} days old)")
+        elif features['domain_age_days'] < 30:
+            reasons.append(f"Domain appears very new ({features['domain_age_days']:.0f} days old)")
+    else:
+        reasons.append("Domain age unknown — WHOIS lookup failed")
+    
+    if not features['dns_resolved']:
+        reasons.append("DNS resolution failed — domain may not exist")
     
     if features['suspicious_keyword_count'] > 0:
-        reasons.append(f"Contains {int(features['suspicious_keyword_count'])} suspicious keywords (login, verify, etc.)")
+        reasons.append(f"Contains {int(features['suspicious_keyword_count'])} suspicious keywords")
     
     if features['has_ip_address']:
         reasons.append("Uses raw IP address instead of domain name")
@@ -86,13 +106,23 @@ def predict_endpoint():
         "url": result['url'],
         "domain": url.replace('https://', '').replace('http://', '').split('/')[0],
         "risk_score": round(risk_score, 1),
-        "prediction": prediction,
+        "risk_level": risk_level,
+        "color": color,
+        "prediction": result['prediction'],
+        "llm_reasoning": llm_reason,
         "features": {
             "has_ssl": features['has_ssl'],
             "ssl_days_left": features['ssl_days_left'],
             "cvr_found": features['cvr_found'],
             "domain_age_days": features['domain_age_days'],
-            "vt_malicious": features['vt_malicious']
+            "domain_age_real": features['domain_age_real'],
+            "dns_resolved": features['dns_resolved'],
+            "dns_ip": features['dns_ip'],
+            "vt_malicious": features['vt_malicious'],
+            "typosquatting_score": features['typosquatting_score'],
+            "char_substitution_detected": features['char_substitution_detected'],
+            "domain_entropy": features['domain_entropy'],
+            "suspicious_keyword_count": features['suspicious_keyword_count']
         },
         "reasons": reasons,
         "scan_id": str(uuid.uuid4())[:8]
@@ -104,8 +134,10 @@ def health():
         "status": "ok",
         "model_loaded": os.path.exists(MODEL_PATH),
         "model_path": MODEL_PATH,
-        "model_accuracy": "98.74%",
-        "dataset_size": "1593 URLs (1400 phishing + 193 legitimate)"
+        "model_accuracy": "94.51%",
+        "dataset_size": "1091 URLs (900 phishing + 191 legitimate)",
+        "features": "31 features including DNS, WHOIS, typosquatting, LLM reasoning",
+        "version": "v2.0"
     })
 
 if __name__ == '__main__':
