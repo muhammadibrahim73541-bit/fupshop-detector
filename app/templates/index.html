@@ -2,391 +2,313 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FupShop — Danish Webshop Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FupShop v2.0 — Danish Webshop Security Scanner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --danish-red: #C60C30;
-            --safe-green: #28A745;
-            --caution-gold: #FFC107;
-            --avoid-red: #DC3545;
+            --primary: #C60C30;
+            --primary-dark: #a00a28;
+            --safe: #10B981;
+            --safe-light: #D1FAE5;
+            --caution: #F59E0B;
+            --caution-light: #FEF3C7;
+            --danger: #EF4444;
+            --danger-light: #FEE2E2;
+            --dark: #111827;
+            --gray: #6B7280;
+            --light-gray: #F3F4F6;
         }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .main-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            border: none;
-        }
-
-        .logo {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--danish-red);
-            letter-spacing: -1px;
-        }
-
-        .tagline {
-            color: rgba(255,255,255,0.9);
-            font-size: 1.1rem;
-        }
-
-        .scan-input {
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 15px 20px;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-        }
-
-        .scan-input:focus {
-            border-color: var(--danish-red);
-            box-shadow: 0 0 0 0.2rem rgba(198, 12, 48, 0.15);
-        }
-
-        .btn-scan {
-            background: var(--danish-red);
-            border: none;
-            border-radius: 12px;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-            transition: all 0.3s;
-        }
-
-        .btn-scan:hover {
-            background: #a00a28;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(198, 12, 48, 0.3);
-        }
-
-        .result-card {
-            border-radius: 16px;
-            padding: 40px;
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        .result-safe {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            border: 2px solid var(--safe-green);
-        }
-
-        .result-caution {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            border: 2px solid var(--caution-gold);
-        }
-
-        .result-avoid {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            border: 2px solid var(--avoid-red);
-        }
-
-        .score-circle {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 3rem;
-            font-weight: 800;
-            color: white;
-        }
-
-        .score-safe { background: linear-gradient(135deg, #28a745, #20c997); }
-        .score-caution { background: linear-gradient(135deg, #ffc107, #ff9800); color: #212529; }
-        .score-avoid { background: linear-gradient(135deg, #dc3545, #c82333); }
-
-        .prediction-badge {
-            font-size: 1.5rem;
-            font-weight: 700;
-            padding: 10px 30px;
-            border-radius: 50px;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .badge-safe { background: var(--safe-green); color: white; }
-        .badge-caution { background: var(--caution-gold); color: #212529; }
-        .badge-avoid { background: var(--avoid-red); color: white; }
-
-        .detail-section {
-            background: rgba(255,255,255,0.7);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .detail-item:last-child { border-bottom: none; }
-
-        .detail-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 1.2rem;
-        }
-
-        .icon-safe { background: #d4edda; color: var(--safe-green); }
-        .icon-warn { background: #fff3cd; color: #856404; }
-        .icon-danger { background: #f8d7da; color: var(--avoid-red); }
-
-        .shap-reason {
-            background: rgba(255,255,255,0.9);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-left: 4px solid var(--danish-red);
-            font-size: 0.95rem;
-        }
-
-        .history-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }
-
-        .history-item:hover {
-            transform: translateX(5px);
-        }
-
-        .footer-note {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85rem;
-            margin-top: 30px;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--danish-red);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; overflow-x: hidden; width: 100%; }
+        body { background: #FAFBFC; min-height: 100vh; }
+        .navbar { background: white; border-bottom: 1px solid #E5E7EB; padding: 0.75rem 0; position: sticky; top: 0; z-index: 1000; }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; }
+        .navbar-brand { font-weight: 800; font-size: 1.25rem; color: var(--primary) !important; text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-link { color: var(--gray) !important; font-weight: 500; font-size: 0.85rem; text-decoration: none; }
+        .nav-link:hover { color: var(--dark) !important; }
+        .version-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 60px 1rem; text-align: center; color: white; }
+        .hero h1 { font-size: clamp(1.8rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1px; line-height: 1.2; }
+        .hero h1 span { color: #FCD34D; }
+        .hero p { font-size: clamp(0.9rem, 2vw, 1.25rem); color: rgba(255,255,255,0.9); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.6; padding: 0 1rem; }
+        .badge-hero { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 500; display: inline-block; margin-bottom: 1.5rem; }
+        .scanner-wrapper { max-width: 600px; margin: -40px auto 0; padding: 0 1rem; position: relative; z-index: 10; }
+        .scanner-card { background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 30px 20px; }
+        @media (min-width: 768px) { .scanner-card { padding: 40px; } .scanner-wrapper { margin-top: -50px; } }
+        .scan-input { border: 2px solid #E5E7EB; border-radius: 12px; padding: 14px 18px; font-size: 1rem; transition: all 0.3s; width: 100%; }
+        .scan-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(198, 12, 48, 0.1); outline: none; }
+        .btn-scan { background: var(--primary); border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; color: white; width: 100%; transition: all 0.3s; margin-top: 0.5rem; cursor: pointer; }
+        .btn-scan:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(198, 12, 48, 0.3); }
+        .btn-scan:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .result-container { margin-top: 20px; }
+        .result-header { border-radius: 16px; padding: 30px 20px; text-align: center; color: white; margin-bottom: 20px; }
+        .result-safe { background: linear-gradient(135deg, #10B981, #059669); }
+        .result-caution { background: linear-gradient(135deg, #F59E0B, #D97706); }
+        .result-danger { background: linear-gradient(135deg, #EF4444, #DC2626); }
+        .score-big { font-size: clamp(3rem, 8vw, 5rem); font-weight: 800; line-height: 1; }
+        .score-label { font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 700; margin-top: 8px; text-transform: uppercase; letter-spacing: 2px; }
+        .domain-text { font-size: 0.9rem; opacity: 0.9; margin-top: 8px; word-break: break-all; }
+        .llm-box { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 16px; border-left: 4px solid var(--primary); }
+        .llm-box h4 { font-weight: 700; color: var(--dark); margin-bottom: 12px; font-size: 1rem; }
+        .llm-box h4 i { color: var(--primary); margin-right: 8px; }
+        .llm-text { font-size: 0.95rem; line-height: 1.6; color: #374151; word-wrap: break-word; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+        @media (min-width: 480px) { .detail-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 768px) { .detail-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+        .detail-card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.3s; }
+        .detail-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .detail-card .icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 10px; }
+        .detail-card h5 { font-weight: 600; font-size: 0.9rem; color: var(--dark); margin-bottom: 4px; }
+        .detail-card p { color: var(--gray); font-size: 0.8rem; margin: 0; line-height: 1.4; }
+        .icon-safe { background: var(--safe-light); color: var(--safe); }
+        .icon-caution { background: var(--caution-light); color: var(--caution); }
+        .icon-danger { background: var(--danger-light); color: var(--danger); }
+        .icon-info { background: #DBEAFE; color: #3B82F6; }
+        .wandb-info { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 0.8rem; color: #166534; text-align: center; }
+        .wandb-info i { color: #22C55E; margin-right: 6px; }
+        .shops-section { padding: 60px 1rem; text-align: center; }
+        .shops-section h2 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; }
+        .shops-section > p { color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem; }
+        .shops-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 1200px; margin: 0 auto; }
+        @media (min-width: 480px) { .shops-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+        @media (min-width: 768px) { .shops-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+        .shop-card { background: white; border-radius: 16px; padding: 20px 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: all 0.3s; border: 2px solid transparent; cursor: pointer; }
+        .shop-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .shop-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.4rem; font-weight: 700; color: white; }
+        .shop-card h5 { font-weight: 600; font-size: 0.9rem; color: var(--dark); margin-bottom: 3px; }
+        .shop-card small { color: var(--gray); font-size: 0.75rem; display: block; }
+        .shop-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-top: 8px; }
+        .badge-verified { background: var(--safe-light); color: var(--safe); }
+        .footer { background: var(--dark); color: white; padding: 40px 1rem 20px; margin-top: 60px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; text-align: center; }
+        @media (min-width: 768px) { .footer-content { grid-template-columns: 1fr 1fr; text-align: left; } }
+        .footer h5 { font-weight: 700; margin-bottom: 12px; font-size: 1rem; }
+        .footer p { color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.6; }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 30px; padding-top: 16px; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+        .loading-overlay { text-align: center; padding: 40px 20px; }
+        .spinner { width: 50px; height: 50px; border: 3px solid #E5E7EB; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .d-none { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <div class="logo">🛡️ FupShop</div>
-            <p class="tagline">Check Danish webshops before you pay. Free. No signup.</p>
-        </div>
-
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <!-- Main Card -->
-                <div class="main-card p-4 p-md-5">
-                    <form id="scanForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Webshop URL</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="bi bi-globe text-muted"></i>
-                                </span>
-                                <input type="url" class="form-control scan-input border-start-0" 
-                                       id="urlInput" placeholder="https://shop.dk" required>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">CVR Number <span class="text-muted fw-normal">(optional)</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="bi bi-building text-muted"></i>
-                                </span>
-                                <input type="text" class="form-control scan-input border-start-0" 
-                                       id="cvrInput" placeholder="12345678" maxlength="8">
-                            </div>
-                            <div class="form-text">Danish company registry number. Improves accuracy.</div>
-                        </div>
-
-                        <button type="submit" class="btn btn-scan w-100">
-                            <i class="bi bi-shield-check me-2"></i>Scan Now
-                        </button>
-                    </form>
-
-                    <!-- Loading -->
-                    <div id="loading" class="d-none text-center py-4">
-                        <div class="loading-spinner"></div>
-                        <p class="text-muted mt-3">Analyzing domain, SSL, registry, reputation...</p>
-                    </div>
-
-                    <!-- Result -->
-                    <div id="result" class="d-none fade-in"></div>
-                </div>
-
-                <!-- Recent Scans -->
-                {% if history %}
-                <div class="mt-4">
-                    <h5 class="text-white mb-3"><i class="bi bi-clock-history me-2"></i>Recent Scans</h5>
-                    {% for scan in history %}
-                    <div class="history-item d-flex justify-content-between align-items-center">
-                        <div class="text-truncate" style="max-width: 60%;">
-                            <strong class="text-dark">{{ scan[1] }}</strong>
-                            <small class="text-muted d-block text-truncate">{{ scan[0] }}</small>
-                        </div>
-                        <span class="badge rounded-pill {% if scan[3] == 'SAFE' %}bg-success{% elif scan[3] == 'CAUTION' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                            {{ scan[3] }} {{ "%.0f"|format(scan[2]) }}%
-                        </span>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">🛡️ FupShop</a>
+            <div class="nav-links">
+                <a class="nav-link" href="#scanner">Scanner</a>
+                <a class="nav-link" href="#shops">Shops</a>
+                <a class="nav-link" href="#about">About</a>
+                <span class="version-badge">v2.0</span>
             </div>
         </div>
-
-        <!-- Footer -->
-        <div class="text-center footer-note">
-            <p>Powered by CVR API, VirusTotal, WHOIS & Danish open data</p>
-            <p>MSc BDS — Aalborg University</p>
+    </nav>
+    <section class="hero">
+        <div class="badge-hero">🔒 AI-Powered Security v2.0</div>
+        <h1>Check Any Danish<br><span>Webshop</span> for Scams</h1>
+        <p>Instantly analyze URLs for typosquatting, fake shops, SSL issues, WHOIS verification, and AI-powered reasoning. Tracked with W&B.</p>
+    </section>
+    <section id="scanner">
+        <div class="scanner-wrapper">
+            <div class="scanner-card">
+                <form id="scanForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.9rem;">Enter Webshop URL</label>
+                        <input type="url" class="scan-input" id="urlInput" placeholder="https://www.bilka.dk" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.9rem;">CVR Number <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="text" class="scan-input" id="cvrInput" placeholder="12345678" maxlength="8">
+                        <div class="form-text text-muted" style="font-size: 0.75rem;">Danish company registry number for extra verification</div>
+                    </div>
+                    <button type="submit" class="btn-scan" id="scanBtn">
+                        <i class="bi bi-shield-check me-2"></i>Scan Now
+                    </button>
+                </form>
+                <div id="loading" class="d-none loading-overlay">
+                    <div class="spinner"></div>
+                    <p class="text-muted" style="font-size: 0.9rem;">Analyzing domain, SSL, WHOIS, typosquatting, LLM reasoning...</p>
+                </div>
+                <div id="result" class="d-none"></div>
+            </div>
         </div>
-    </div>
-
+    </section>
+    <section class="shops-section" id="shops">
+        <h2>Trusted Danish Shops</h2>
+        <p>Click any to instantly scan</p>
+        <div class="shops-grid">
+            <div class="shop-card" onclick="scanShop('https://www.bilka.dk')">
+                <div class="shop-icon" style="background: #C60C30;">B</div>
+                <h5>Bilka</h5>
+                <small>Supermarket</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.elgiganten.dk')">
+                <div class="shop-icon" style="background: #0058A3;">E</div>
+                <h5>Elgiganten</h5>
+                <small>Electronics</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.matas.dk')">
+                <div class="shop-icon" style="background: #E91E63;">M</div>
+                <h5>Matas</h5>
+                <small>Beauty</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.zalando.dk')">
+                <div class="shop-icon" style="background: #FF6900;">Z</div>
+                <h5>Zalando</h5>
+                <small>Fashion</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.power.dk')">
+                <div class="shop-icon" style="background: #00A651;">P</div>
+                <h5>Power</h5>
+                <small>Electronics</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.proshop.dk')">
+                <div class="shop-icon" style="background: #1E3A8A;">P</div>
+                <h5>Proshop</h5>
+                <small>IT & gadgets</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.salling.dk')">
+                <div class="shop-icon" style="background: #7C3AED;">S</div>
+                <h5>Salling</h5>
+                <small>Department</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+            <div class="shop-card" onclick="scanShop('https://www.foetex.dk')">
+                <div class="shop-icon" style="background: #059669;">F</div>
+                <h5>Føtex</h5>
+                <small>Supermarket</small>
+                <span class="shop-badge badge-verified">✓ Verified</span>
+            </div>
+        </div>
+    </section>
+    <footer class="footer" id="about">
+        <div class="footer-content">
+            <div>
+                <h5>🛡️ FupShop Detector v2.0</h5>
+                <p>AI-powered phishing detection for Danish e-commerce. Versioned with Git tags, tracked with Weights & Biases.</p>
+            </div>
+            <div>
+                <h5>Powered By</h5>
+                <p>XGBoost • OpenRouter LLM • WHOIS • DNS • CVR API • W&B</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>MSc BDS — Aalborg University • Muhammad Ibrahim • <a href="https://github.com/muhammadibrahim73541-bit/fupshop-detector" style="color: rgba(255,255,255,0.7);">GitHub v2.0</a></p>
+        </div>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function scanShop(url) {
+            document.getElementById('urlInput').value = url;
+            document.getElementById('scanForm').dispatchEvent(new Event('submit'));
+            document.getElementById('scanner').scrollIntoView({ behavior: 'smooth' });
+        }
         document.getElementById('scanForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const url = document.getElementById('urlInput').value;
             const cvr = document.getElementById('cvrInput').value;
-            
+            const btn = document.getElementById('scanBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Scanning...';
             document.getElementById('result').classList.add('d-none');
             document.getElementById('loading').classList.remove('d-none');
-            
             try {
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({url, cvr})
                 });
-                
                 const data = await response.json();
-                
-                let resultClass = data.prediction === 'SAFE' ? 'result-safe' : 
-                                 data.prediction === 'CAUTION' ? 'result-caution' : 'result-avoid';
-                let scoreClass = data.prediction === 'SAFE' ? 'score-safe' : 
-                                data.prediction === 'CAUTION' ? 'score-caution' : 'score-avoid';
-                let badgeClass = data.prediction === 'SAFE' ? 'badge-safe' : 
-                                 data.prediction === 'CAUTION' ? 'badge-caution' : 'badge-avoid';
-                
-                // Build detail items
+                const resultClass = data.risk_level === 'SAFE' ? 'result-safe' : data.risk_level === 'CAUTION' ? 'result-caution' : 'result-danger';
                 const details = [];
-                if (data.features) {
-                    if (data.features.has_ssl) {
-                        details.push({icon: 'bi-lock-fill', iconClass: 'icon-safe', text: 'SSL Certificate Valid', sub: `${data.features.ssl_days_left} days remaining`});
-                    } else {
-                        details.push({icon: 'bi-unlock-fill', iconClass: 'icon-danger', text: 'No SSL Certificate', sub: 'Connection not encrypted'});
-                    }
-                    
-                    if (data.features.cvr_found) {
-                        details.push({icon: 'bi-check-circle-fill', iconClass: 'icon-safe', text: 'CVR Number Found', sub: 'Registered Danish company'});
-                    } else {
-                        details.push({icon: 'bi-x-circle-fill', iconClass: 'icon-warn', text: 'CVR Not Found', sub: 'Company registry check failed'});
-                    }
-                    
-                    if (data.features.domain_age_days > 365) {
-                        details.push({icon: 'bi-calendar-check', iconClass: 'icon-safe', text: 'Established Domain', sub: `${Math.round(data.features.domain_age_days/365)} years old`});
-                    } else {
-                        details.push({icon: 'bi-calendar-x', iconClass: 'icon-warn', text: 'New Domain', sub: `${data.features.domain_age_days} days old`});
-                    }
-                    
-                    if (data.features.vt_malicious === 0) {
-                        details.push({icon: 'bi-shield-fill-check', iconClass: 'icon-safe', text: 'Clean Reputation', sub: 'No security engines flagged'});
-                    } else {
-                        details.push({icon: 'bi-shield-fill-exclamation', iconClass: 'icon-danger', text: 'Flagged by Security Engines', sub: `${data.features.vt_malicious} malicious reports`});
-                    }
+                if (data.features.has_ssl) {
+                    details.push({icon: 'bi-lock-fill', iconClass: 'icon-safe', title: 'SSL Secure', desc: 'HTTPS encrypted'});
+                } else {
+                    details.push({icon: 'bi-unlock-fill', iconClass: 'icon-danger', title: 'No SSL', desc: 'Plaintext connection'});
                 }
-                
+                if (data.features.dns_resolved) {
+                    details.push({icon: 'bi-globe', iconClass: 'icon-safe', title: 'DNS Resolved', desc: 'Domain exists'});
+                } else {
+                    details.push({icon: 'bi-globe', iconClass: 'icon-caution', title: 'DNS Failed', desc: 'May not exist'});
+                }
+                if (data.features.domain_age_real) {
+                    const years = Math.floor(data.features.domain_age_days / 365);
+                    details.push({icon: 'bi-calendar-check', iconClass: 'icon-safe', title: 'Domain Verified', desc: `${years} years old`});
+                } else {
+                    details.push({icon: 'bi-calendar-x', iconClass: 'icon-caution', title: 'Age Unknown', desc: 'WHOIS failed'});
+                }
+                if (data.features.typosquatting_score > 0.7) {
+                    details.push({icon: 'bi-exclamation-triangle-fill', iconClass: 'icon-danger', title: 'Typosquatting', desc: `Score: ${data.features.typosquatting_score.toFixed(2)}`});
+                } else if (data.features.typosquatting_score > 0.3) {
+                    details.push({icon: 'bi-search', iconClass: 'icon-caution', title: 'Similar Domain', desc: `Score: ${data.features.typosquatting_score.toFixed(2)}`});
+                } else {
+                    details.push({icon: 'bi-check-circle', iconClass: 'icon-safe', title: 'No Typosquatting', desc: 'Clean domain'});
+                }
+                if (data.features.cvr_found) {
+                    details.push({icon: 'bi-building-check', iconClass: 'icon-safe', title: 'CVR Verified', desc: 'Danish registry'});
+                } else if (cvr) {
+                    details.push({icon: 'bi-building-x', iconClass: 'icon-caution', title: 'CVR Not Found', desc: 'Not registered'});
+                } else {
+                    details.push({icon: 'bi-building', iconClass: 'icon-info', title: 'CVR Not Checked', desc: 'Enter for verification'});
+                }
+                if (data.features.vt_malicious > 0) {
+                    details.push({icon: 'bi-shield-exclamation', iconClass: 'icon-danger', title: 'VirusTotal', desc: `${data.features.vt_malicious} flags`});
+                } else {
+                    details.push({icon: 'bi-shield-check', iconClass: 'icon-safe', title: 'Clean Rep', desc: 'No flags'});
+                }
                 const detailsHtml = details.map(d => `
-                    <div class="detail-item">
-                        <div class="detail-icon ${d.iconClass}">
+                    <div class="detail-card fade-in">
+                        <div class="icon ${d.iconClass}">
                             <i class="bi ${d.icon}"></i>
                         </div>
-                        <div>
-                            <div class="fw-semibold">${d.text}</div>
-                            <small class="text-muted">${d.sub}</small>
-                        </div>
+                        <h5>${d.title}</h5>
+                        <p>${d.desc}</p>
                     </div>
                 `).join('');
-                
-                // SHAP reasons
-                const reasonsHtml = data.reasons ? data.reasons.map(r => `
-                    <div class="shap-reason">
-                        <i class="bi bi-arrow-right-circle-fill text-danger me-2"></i>${r}
+                const llmHtml = data.llm_reasoning ? `
+                    <div class="llm-box fade-in">
+                        <h4><i class="bi bi-robot"></i>AI Analysis</h4>
+                        <div class="llm-text">${data.llm_reasoning}</div>
                     </div>
-                `).join('') : '';
-                
+                ` : '';
+                const wandbHtml = `
+                    <div class="wandb-info">
+                        <i class="bi bi-graph-up"></i>
+                        <strong>W&B:</strong> v2.0 • 94.5% accuracy • 31 features • XGBoost + LLM
+                    </div>
+                `;
                 document.getElementById('result').innerHTML = `
-                    <div class="result-card ${resultClass}">
-                        <div class="score-circle ${scoreClass}">
-                            ${Math.round(data.risk_score)}%
+                    <div class="result-container fade-in">
+                        <div class="result-header ${resultClass}">
+                            <div class="score-big">${Math.round(data.risk_score)}%</div>
+                            <div class="score-label">${data.risk_level}</div>
+                            <div class="domain-text">${data.domain}</div>
                         </div>
-                        <div class="prediction-badge ${badgeClass}">
-                            ${data.prediction}
-                        </div>
-                        <p class="text-muted mb-0">${data.domain}</p>
-                        
-                        <div class="detail-section">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Scan Details</h6>
+                        ${llmHtml}
+                        <div class="detail-grid">
                             ${detailsHtml}
                         </div>
-                        
-                        <div class="detail-section">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb me-2"></i>Why This Score</h6>
-                            ${reasonsHtml}
-                        </div>
-                        
-                        <div class="mt-3">
-                            <small class="text-muted">Scan #${data.scan_id}</small>
+                        ${wandbHtml}
+                        <div class="text-center mt-3">
+                            <small style="color: var(--gray); font-size: 0.75rem;">Scan #${data.scan_id} • v2.0 • XGBoost + LLM</small>
                         </div>
                     </div>
                 `;
-                
             } catch (err) {
                 document.getElementById('result').innerHTML = `
-                    <div class="alert alert-danger rounded-3">
+                    <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; color: #DC2626;">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         Error: ${err.message}
                     </div>
@@ -394,6 +316,8 @@
             } finally {
                 document.getElementById('loading').classList.add('d-none');
                 document.getElementById('result').classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-2"></i>Scan Now';
             }
         });
     </script>
