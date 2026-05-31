@@ -4,6 +4,7 @@ import ssl
 import math
 import requests
 import os
+import json
 from urllib.parse import urlparse
 from datetime import datetime
 
@@ -11,6 +12,7 @@ class URLFeatureExtractor:
     def __init__(self):
         self.suspicious_keywords = [
             'login', 'verify', 'secure', 'account', 'update', 'confirm',
+            'bank', 'payment', 'password', 'credential', 'authenticate',
             'signin', 'signup', 'security', 'alert', 'suspend', 'restrict',
             'validate', 'authenticate', 'billing', 'invoice', 'order'
         ]
@@ -92,7 +94,7 @@ class URLFeatureExtractor:
             return 0, "N/A"
 
     def _check_whois_with_rdap(self, domain: str) -> tuple:
-
+        # Try python-whois first (works locally, fails in HF containers due to port 43 block)
         try:
             import whois
             w = whois.whois(domain)
@@ -100,8 +102,11 @@ class URLFeatureExtractor:
                 creation = w.creation_date[0] if isinstance(w.creation_date, list) else w.creation_date
                 if isinstance(creation, datetime):
                     age_days = (datetime.now() - creation).days
-                    return age_days, 1, {"registrar": str(w.registrar), "creation_date": str(creation)}
+                    return age_days, 1, {"registrar": str(w.registrar), "creation_date": str(creation), "source": "WHOIS"}
         except:
+            pass
+
+        # Fallback to RDAP (HTTPS-based, works in some containers)
         try:
             rdap_url = f"https://rdap.org/domain/{domain}"
             response = requests.get(rdap_url, timeout=10)
@@ -115,7 +120,11 @@ class URLFeatureExtractor:
                             age_days = (datetime.now() - creation).days
                             return age_days, 1, {"source": "RDAP"}
         except:
-        return 365, 0, {"error": "WHOIS failed"}
+            pass
+
+        # Final fallback: return neutral age so it doesn't hurt predictions
+        # Documented limitation: HF containers block port 43 (WHOIS protocol)
+        return 5000, 0, {"error": "WHOIS unavailable", "note": "Network restrictions in cloud deployment. python-whois works locally."}
 
     def _check_ssl(self, domain: str) -> tuple:
         try:
@@ -155,7 +164,7 @@ class URLFeatureExtractor:
             if not brand_clean or len(brand_clean) < 3:
                 continue
 
-            # EXACT MATCH → NOT typosquatting
+            # EXACT MATCH -> NOT typosquatting
             if base_clean == brand_clean:
                 return 0, 0
 
