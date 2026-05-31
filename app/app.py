@@ -12,13 +12,11 @@ app = Flask(__name__, template_folder='templates')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, 'src', 'models', 'fupshop_model.pkl')
 
-# Download model if not present (for HF Spaces deployment)
 if not os.path.exists(MODEL_PATH):
     try:
         download_model_if_needed()
     except Exception as e:
         print(f"Warning: Could not download model: {e}")
-        print("App will fail on first prediction if model is missing.")
 
 predictor = FupShopPredictor(model_path=MODEL_PATH)
 
@@ -31,19 +29,18 @@ def predict_endpoint():
     data = request.get_json() or request.form
     url = data.get('url', '').strip()
     cvr = data.get('cvr', '').strip()
-    
+
     if not url:
         return jsonify({"error": "URL required"}), 400
-    
+
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
-    
+
     result = predictor.predict(url, cvr=cvr if cvr else None)
     prob = result['phishing_probability']
     features = result['features']
     llm_reason = result['llm_reasoning']
-    
-    # Risk level
+
     risk_score = prob * 100
     if risk_score < 30:
         risk_level = 'SAFE'
@@ -54,54 +51,55 @@ def predict_endpoint():
     else:
         risk_level = 'DANGER'
         color = 'red'
-    
-    # Technical reasons
+
     reasons = []
-    
     if not features['has_ssl']:
         reasons.append("No SSL certificate — data transmitted in plaintext")
     else:
         reasons.append("SSL certificate present — connection is encrypted")
-    
+
     if features['typosquatting_score'] > 0.7:
         reasons.append(f"Domain closely resembles a known Danish shop (typosquatting score: {features['typosquatting_score']:.2f})")
     elif features['typosquatting_score'] > 0.3:
         reasons.append(f"Domain similar to known brand (typosquatting score: {features['typosquatting_score']:.2f})")
-    
+
     if features['domain_age_real']:
         if features['domain_age_days'] > 3650:
             reasons.append(f"Domain is well-established ({features['domain_age_days']:.0f} days old)")
         elif features['domain_age_days'] < 30:
             reasons.append(f"Domain appears very new ({features['domain_age_days']:.0f} days old)")
     else:
-        reasons.append("Domain age unknown — WHOIS lookup failed")
-    
+        reasons.append("Domain age unavailable — WHOIS restricted in cloud environment")
+
     if not features['dns_resolved']:
         reasons.append("DNS resolution failed — domain may not exist")
-    
+
     if features['suspicious_keyword_count'] > 0:
         reasons.append(f"Contains {int(features['suspicious_keyword_count'])} suspicious keywords")
-    
+
     if features['has_ip_address']:
         reasons.append("Uses raw IP address instead of domain name")
-    
+
     if features['multiple_subdomains']:
         reasons.append("Unusual subdomain structure detected")
-    
+
     if features['domain_entropy'] > 3.5:
         reasons.append("High domain randomness — possibly auto-generated")
-    
-    if features['cvr_found']:
-        reasons.append("CVR number verified in Danish company registry")
+
+    # CVR logic: match domain to company
+    if features.get('cvr_match', 0):
+        reasons.append(f"CVR verified — matches {features.get('cvr_company', 'company')}")
+    elif features.get('cvr_found', 0) and cvr:
+        reasons.append(f"CVR {cvr} found but does NOT match this domain — possible fake!")
     elif cvr:
         reasons.append("CVR number not found in registry")
-    
+
     if features['vt_malicious'] > 0:
         reasons.append(f"Flagged by {int(features['vt_malicious'])} security engines on VirusTotal")
-    
+
     if not reasons:
         reasons.append("No significant risk factors detected")
-    
+
     return jsonify({
         "url": result['url'],
         "domain": url.replace('https://', '').replace('http://', '').split('/')[0],
@@ -113,7 +111,9 @@ def predict_endpoint():
         "features": {
             "has_ssl": features['has_ssl'],
             "ssl_days_left": features['ssl_days_left'],
-            "cvr_found": features['cvr_found'],
+            "cvr_found": features.get('cvr_found', 0),
+            "cvr_match": features.get('cvr_match', 0),
+            "cvr_company": features.get('cvr_company', ''),
             "domain_age_days": features['domain_age_days'],
             "domain_age_real": features['domain_age_real'],
             "dns_resolved": features['dns_resolved'],
@@ -136,7 +136,7 @@ def health():
         "model_path": MODEL_PATH,
         "model_accuracy": "94.51%",
         "dataset_size": "1091 URLs (900 phishing + 191 legitimate)",
-        "features": "31 features including DNS, WHOIS, typosquatting, LLM reasoning",
+        "features": "31 features including DNS, WHOIS, typosquatting, LLM reasoning, real CVR verification",
         "version": "v2.0"
     })
 

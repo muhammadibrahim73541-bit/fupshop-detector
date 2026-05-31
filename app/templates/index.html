@@ -256,10 +256,10 @@
                 } else {
                     details.push({icon: 'bi-check-circle', iconClass: 'icon-safe', title: 'No Typosquatting', desc: 'Clean domain'});
                 }
-                if (data.features.cvr_found) {
-                    details.push({icon: 'bi-building-check', iconClass: 'icon-safe', title: 'CVR Verified', desc: 'Danish registry'});
-                } else if (cvr) {
-                    details.push({icon: 'bi-building-x', iconClass: 'icon-caution', title: 'CVR Not Found', desc: 'Not registered'});
+                if (data.features.cvr_match) {
+                    details.push({icon: 'bi-building-check', iconClass: 'icon-safe', title: 'CVR Verified', desc: `Matches ${data.features.cvr_company || 'company'`});
+                } else if (data.features.cvr_found) {
+                    details.push({icon: 'bi-building-x', iconClass: 'icon-danger', title: 'CVR Mismatch', desc: `CVR does not match ${data.features.cvr_company || 'this domain'`});
                 } else {
                     details.push({icon: 'bi-building', iconClass: 'icon-info', title: 'CVR Not Checked', desc: 'Enter for verification'});
                 }
