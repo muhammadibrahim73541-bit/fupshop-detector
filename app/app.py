@@ -68,8 +68,6 @@ def predict_endpoint():
             reasons.append(f"Domain is well-established ({features['domain_age_days']:.0f} days old)")
         elif features['domain_age_days'] < 30:
             reasons.append(f"Domain appears very new ({features['domain_age_days']:.0f} days old)")
-    else:
-        reasons.append("Domain age unavailable — WHOIS restricted in cloud environment")
 
     if not features['dns_resolved']:
         reasons.append("DNS resolution failed — domain may not exist")
@@ -86,13 +84,10 @@ def predict_endpoint():
     if features['domain_entropy'] > 3.5:
         reasons.append("High domain randomness — possibly auto-generated")
 
-    # CVR logic: match domain to company
-    if features.get('cvr_match', 0):
+    if features.get('cvr_match'):
         reasons.append(f"CVR verified — matches {features.get('cvr_company', 'company')}")
-    elif features.get('cvr_found', 0) and cvr:
+    elif features.get('cvr_found') and cvr:
         reasons.append(f"CVR {cvr} found but does NOT match this domain — possible fake!")
-    elif cvr:
-        reasons.append("CVR number not found in registry")
 
     if features['vt_malicious'] > 0:
         reasons.append(f"Flagged by {int(features['vt_malicious'])} security engines on VirusTotal")

@@ -8,19 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #C60C30;
-            --primary-dark: #a00a28;
-            --safe: #10B981;
-            --safe-light: #D1FAE5;
-            --caution: #F59E0B;
-            --caution-light: #FEF3C7;
-            --danger: #EF4444;
-            --danger-light: #FEE2E2;
-            --dark: #111827;
-            --gray: #6B7280;
-            --light-gray: #F3F4F6;
-        }
+        :root { --primary: #C60C30; --primary-dark: #a00a28; --safe: #10B981; --safe-light: #D1FAE5; --caution: #F59E0B; --caution-light: #FEF3C7; --danger: #EF4444; --danger-light: #FEE2E2; --dark: #111827; --gray: #6B7280; --light-gray: #F3F4F6; }
         * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
         html, body { margin: 0; padding: 0; overflow-x: hidden; width: 100%; }
         body { background: #FAFBFC; min-height: 100vh; }
@@ -239,32 +227,34 @@
                     details.push({icon: 'bi-unlock-fill', iconClass: 'icon-danger', title: 'No SSL', desc: 'Plaintext connection'});
                 }
                 if (data.features.dns_resolved) {
-                    details.push({icon: 'bi-globe', iconClass: 'icon-safe', title: 'DNS Resolved', desc: `IP: ${data.features.dns_ip}`});
+                    details.push({icon: 'bi-globe', iconClass: 'icon-safe', title: 'DNS Resolved', desc: 'IP: ' + data.features.dns_ip});
                 } else {
                     details.push({icon: 'bi-globe', iconClass: 'icon-caution', title: 'DNS Failed', desc: 'May not exist'});
                 }
                 if (data.features.domain_age_real) {
                     const years = Math.floor(data.features.domain_age_days / 365);
-                    details.push({icon: 'bi-calendar-check', iconClass: 'icon-safe', title: 'Domain Verified', desc: `${years} years old`});
+                    details.push({icon: 'bi-calendar-check', iconClass: 'icon-safe', title: 'Domain Verified', desc: years + ' years old'});
                 } else {
-                    details.push({icon: 'bi-calendar-x', iconClass: 'icon-caution', title: 'Age Unknown', desc: 'WHOIS failed'});
+                    details.push({icon: 'bi-calendar-x', iconClass: 'icon-caution', title: 'Age Unknown', desc: 'Unavailable in cloud'});
                 }
                 if (data.features.typosquatting_score > 0.7) {
-                    details.push({icon: 'bi-exclamation-triangle-fill', iconClass: 'icon-danger', title: 'Typosquatting', desc: `Score: ${data.features.typosquatting_score.toFixed(2)}`});
+                    details.push({icon: 'bi-exclamation-triangle-fill', iconClass: 'icon-danger', title: 'Typosquatting', desc: 'Score: ' + data.features.typosquatting_score.toFixed(2)});
                 } else if (data.features.typosquatting_score > 0.3) {
-                    details.push({icon: 'bi-search', iconClass: 'icon-caution', title: 'Similar Domain', desc: `Score: ${data.features.typosquatting_score.toFixed(2)}`});
+                    details.push({icon: 'bi-search', iconClass: 'icon-caution', title: 'Similar Domain', desc: 'Score: ' + data.features.typosquatting_score.toFixed(2)});
                 } else {
                     details.push({icon: 'bi-check-circle', iconClass: 'icon-safe', title: 'No Typosquatting', desc: 'Clean domain'});
                 }
                 if (data.features.cvr_match) {
-                    details.push({icon: 'bi-building-check', iconClass: 'icon-safe', title: 'CVR Verified', desc: `Matches ${data.features.cvr_company || 'company'`});
+                    details.push({icon: 'bi-building-check', iconClass: 'icon-safe', title: 'CVR Verified', desc: 'Matches ' + (data.features.cvr_company || 'company')});
                 } else if (data.features.cvr_found) {
-                    details.push({icon: 'bi-building-x', iconClass: 'icon-danger', title: 'CVR Mismatch', desc: `CVR does not match ${data.features.cvr_company || 'this domain'`});
+                    details.push({icon: 'bi-building-x', iconClass: 'icon-danger', title: 'CVR Mismatch', desc: 'Does not match ' + (data.features.cvr_company || 'this domain')});
+                } else if (cvr) {
+                    details.push({icon: 'bi-building', iconClass: 'icon-caution', title: 'CVR Not Found', desc: 'Not in registry'});
                 } else {
                     details.push({icon: 'bi-building', iconClass: 'icon-info', title: 'CVR Not Checked', desc: 'Enter for verification'});
                 }
                 if (data.features.vt_malicious > 0) {
-                    details.push({icon: 'bi-shield-exclamation', iconClass: 'icon-danger', title: 'VirusTotal', desc: `${data.features.vt_malicious} flags`});
+                    details.push({icon: 'bi-shield-exclamation', iconClass: 'icon-danger', title: 'VirusTotal', desc: data.features.vt_malicious + ' flags'});
                 } else {
                     details.push({icon: 'bi-shield-check', iconClass: 'icon-safe', title: 'Clean Rep', desc: 'No flags'});
                 }
