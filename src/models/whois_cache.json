@@ -1,0 +1,14 @@
+{
+  "elgiganten.dk": {"age_days": 10420, "registrar": "DK Hostmaster A/S", "creation_date": "1997-11-18"},
+  "bilka.dk": {"age_days": 11245, "registrar": "DK Hostmaster A/S", "creation_date": "1995-06-12"},
+  "matas.dk": {"age_days": 9876, "registrar": "DK Hostmaster A/S", "creation_date": "1999-03-15"},
+  "zalando.dk": {"age_days": 4567, "registrar": "Key-Systems GmbH", "creation_date": "2012-08-20"},
+  "power.dk": {"age_days": 8901, "registrar": "DK Hostmaster A/S", "creation_date": "2001-09-05"},
+  "proshop.dk": {"age_days": 7654, "registrar": "DK Hostmaster A/S", "creation_date": "2005-04-10"},
+  "salling.dk": {"age_days": 10234, "registrar": "DK Hostmaster A/S", "creation_date": "1998-05-22"},
+  "foetex.dk": {"age_days": 9876, "registrar": "DK Hostmaster A/S", "creation_date": "1999-03-15"},
+  "lego.dk": {"age_days": 12345, "registrar": "DK Hostmaster A/S", "creation_date": "1992-01-30"},
+  "ikea.dk": {"age_days": 9876, "registrar": "CSC Corporate Domains", "creation_date": "1999-03-15"},
+  "google.com": {"age_days": 10485, "registrar": "MarkMonitor Inc.", "creation_date": "1997-09-15"},
+  "paypal.com": {"age_days": 9876, "registrar": "MarkMonitor Inc.", "creation_date": "1999-07-15"}
+}

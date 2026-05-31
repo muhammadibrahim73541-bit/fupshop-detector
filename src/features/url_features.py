@@ -11,7 +11,6 @@ class URLFeatureExtractor:
     def __init__(self):
         self.suspicious_keywords = [
             'login', 'verify', 'secure', 'account', 'update', 'confirm',
-            'bank', 'payment', 'password', 'credential', 'authenticate',
             'signin', 'signup', 'security', 'alert', 'suspend', 'restrict',
             'validate', 'authenticate', 'billing', 'invoice', 'order'
         ]
@@ -93,6 +92,7 @@ class URLFeatureExtractor:
             return 0, "N/A"
 
     def _check_whois_with_rdap(self, domain: str) -> tuple:
+
         try:
             import whois
             w = whois.whois(domain)
@@ -102,7 +102,6 @@ class URLFeatureExtractor:
                     age_days = (datetime.now() - creation).days
                     return age_days, 1, {"registrar": str(w.registrar), "creation_date": str(creation)}
         except:
-            pass
         try:
             rdap_url = f"https://rdap.org/domain/{domain}"
             response = requests.get(rdap_url, timeout=10)
@@ -116,7 +115,6 @@ class URLFeatureExtractor:
                             age_days = (datetime.now() - creation).days
                             return age_days, 1, {"source": "RDAP"}
         except:
-            pass
         return 365, 0, {"error": "WHOIS failed"}
 
     def _check_ssl(self, domain: str) -> tuple:
