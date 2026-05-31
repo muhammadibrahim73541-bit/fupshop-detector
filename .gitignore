@@ -218,5 +218,3 @@ __marimo__/
 .streamlit/secrets.toml
 .env
 .env
-src/models/*.pkl
-src/models/*.json
