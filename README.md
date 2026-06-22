@@ -246,23 +246,6 @@ docker logs -f fupshop
 docker-compose up -d --build
 ```
 
----
-
-## Browser Extension Setup
-
-1. Open Google Chrome and navigate to: `chrome://extensions/`
-2. Enable **Developer Mode** (toggle in the top-right corner)
-3. Click **Load unpacked**
-4. Select the `extension/` folder from this repository
-5. The FupShop extension icon will appear in your Chrome toolbar
-6. Click the icon on any webpage to scan the current URL
-
-### Extension Features
-
-- **Popup Interface** -- Click the extension icon to scan the current tab's URL
-- **Real-time Badge** -- Extension icon changes color based on risk level
-- **Auto-scan** -- Optional: automatically scan URLs when visiting new pages
-- **Quick Report** -- Submit suspicious sites to improve the detection model
 
 ---
 
