@@ -42,7 +42,6 @@ The project was built as a semester project at Aalborg University for the Data E
 | **Content Scanning** | Detects typosquatting, suspicious forms, missing SSL, and scam indicators |
 | **ML Scoring** | XGBoost model assigns a scam probability score (0-100%) |
 | **CVR Validation** | Validates Danish CVR numbers for shop legitimacy |
-| **Browser Extension** | One-click scan from any webpage via Chrome extension (Manifest V3) |
 | **Web Dashboard** | Gradio-based interface with scan history and detailed breakdowns |
 | **SQLite Database** | Persistent storage for scan history and results |
 | **Dockerized** | Full containerization for easy deployment |
@@ -358,7 +357,7 @@ docker push yourusername/fupshop:latest
 ## Authors
 
 - **Muhammad Ibrahim** -- [@muhammadibrahim73541-bit](https://github.com/muhammadibrahim73541-bit)
-- **Rasmus** -- Teammate & Contributor
+- **Asalun Hye Arnob** -- Teammate & Contributor
 
 ---
 
@@ -367,5 +366,3 @@ docker push yourusername/fupshop:latest
 This project is licensed for academic purposes. See LICENSE file for details.
 
 ---
-
-> Built with at Aalborg University for the Data Engineering and Machine Learning Operations course.
